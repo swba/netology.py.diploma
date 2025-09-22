@@ -3,6 +3,8 @@ from django.contrib.auth.models import AbstractUser, Group as GroupBase
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from apps.base.models import LoggableModel
+
 
 class UserManager(BaseUserManager):
     """A model manager for the User model without a username field."""
@@ -37,7 +39,7 @@ class UserManager(BaseUserManager):
         return self._create_user(email, password, **extra_fields)
 
 
-class User(AbstractUser):
+class User(LoggableModel, AbstractUser):
     """An extension of the default User model."""
 
     # We don't need a username in this project.
