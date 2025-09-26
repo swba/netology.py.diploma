@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 
 from apps.base.models import LoggableModel, PhoneField, DeletableModel
 
-from .manager import ProductCardManager, OrderLineItemManager
+from .manager import ProductCardManager, LineItemManager
 
 
 class BaseShopModel(LoggableModel, DeletableModel):
@@ -282,28 +282,24 @@ class Order(BaseShopModel):
         return _("Order from {date}").format(date=self.created_at.date())
 
 
-class OrderLineItem(models.Model):
-    """Order line item is a pair of a product card and its quantity."""
+class BaseLineItem(models.Model):
+    """Base abstract model for order and cart line items.
 
-    order = models.ForeignKey(
-        Order,
-        on_delete=models.CASCADE,
-        related_name='line_items',
-        verbose_name=_("Order"))
+    A line item is just a pair of a product (card) and its quantity.
+    """
+
     product_card = models.ForeignKey(
         ProductCard,
         on_delete=models.CASCADE,
-        related_name='order_line_items',
         verbose_name=_("Product Card"))
     quantity = models.PositiveIntegerField(
         default=1,
         verbose_name=_("Quantity"))
 
-    objects = OrderLineItemManager()
+    objects = LineItemManager()
 
     class Meta:
-        verbose_name = _("Order Line Item")
-        verbose_name_plural = _("Order Line Items")
+        abstract = True
 
     def __str__(self):
         return self.product_card.product.title
@@ -311,3 +307,31 @@ class OrderLineItem(models.Model):
     @property
     def total(self):
         return self.product_card.list_price * self.quantity
+
+
+class OrderLineItem(BaseLineItem):
+    """Line item to be used in orders."""
+
+    order = models.ForeignKey(
+        Order,
+        on_delete=models.CASCADE,
+        related_name='line_items',
+        verbose_name=_("Order"))
+
+    class Meta:
+        verbose_name = _("Order Line Item")
+        verbose_name_plural = _("Order Line Items")
+
+
+class CartLineItem(BaseLineItem):
+    """Line item to be used in customer carts."""
+
+    user = models.ForeignKey(
+        get_user_model(),
+        on_delete=models.CASCADE,
+        related_name='cart',
+        verbose_name=_("User"))
+
+    class Meta:
+        verbose_name = _("Cart Line Item")
+        verbose_name_plural = _("Cart Line Items")
