@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 
 from rest_framework import mixins
+from rest_framework.permissions import IsAdminUser
 from rest_framework.viewsets import GenericViewSet
 
 from .permissions import AccountPermission
@@ -14,4 +15,4 @@ class AccountViewSet(mixins.CreateModelMixin,
 
     serializer_class = UserSerializer
     queryset = get_user_model().objects.all()
-    permission_classes = (AccountPermission,)
+    permission_classes = (AccountPermission | IsAdminUser,)

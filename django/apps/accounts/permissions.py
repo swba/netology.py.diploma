@@ -1,26 +1,21 @@
-from rest_framework import permissions
+from rest_framework.permissions import IsAuthenticated
 
 from .models import User
 
 
-class AccountPermission(permissions.DjangoModelPermissions):
+class AccountPermission(IsAuthenticated):
     """Provides permission for accounts.
 
     The following rules are applied:
-    - Respect model-level permissions first (inherited from
-      DjangoModelPermissions).
     - Anonymous users can post (register).
     - Authenticated users can get and update their accounts.
     """
 
     def has_permission(self, request, view):
         perm = super().has_permission(request, view)
-        if not perm and request.method == 'POST':
-            perm = not request.user or not request.user.is_authenticated
-        return perm
+        return not perm if request.method == 'POST' else perm
 
     def has_object_permission(self, request, view, obj: User):
-        perm = super().has_permission(request, view)
-        if not perm and request.method in ('PUT', 'PATCH', 'GET'):
-            perm = request.user and request.user.pk == obj.pk
-        return perm
+        if request.method in ('PUT', 'PATCH', 'GET'):
+            return request.user and request.user.pk == obj.pk
+        return False
