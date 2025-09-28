@@ -20,11 +20,11 @@ class UserSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         # Validate user password using builtin Django validators.
-        password = attrs.get('password')
-        try:
-            validate_password(password, User(**attrs))
-        except ValidationError as e:
-            raise serializers.ValidationError({'password': e.messages})
-        # If password is OK, hash it.
-        attrs['password'] = make_password(password)
+        if password := attrs.get('password'):
+            try:
+                validate_password(password, User(**attrs))
+            except ValidationError as e:
+                raise serializers.ValidationError({'password': e.messages})
+            # If password is OK, hash it.
+            attrs['password'] = make_password(password)
         return attrs

@@ -272,3 +272,35 @@ def test_user_get(api_client_auth: APIClient):
     user = api_client_auth._user
     response = api_client_auth.get(get_user_url(user.pk))
     assert_response(response, 200, UserSerializer(instance=user).data)
+
+@pytest.mark.django_db
+def test_user_patch__anonymous(api_client: APIClient, user_make_factory):
+    """Test user update (anonymous request)."""
+    user = user_make_factory()
+    data = UserSerializer(instance=user).data
+    response = api_client.patch(get_user_url(user.pk), data)
+    assert_response(response, 401, {
+        'detail': "Authentication credentials were not provided."
+    })
+
+@pytest.mark.django_db
+def test_user_patch__another_user(api_client_auth: APIClient, user_make_factory):
+    """Test user update (as another user)."""
+    user = user_make_factory()
+    data = UserSerializer(instance=user).data
+    response = api_client_auth.patch(get_user_url(user.pk), data)
+    assert_response(response, 403, {
+        'detail': "You do not have permission to perform this action."
+    })
+
+@pytest.mark.django_db
+def test_user_patch(api_client_auth: APIClient):
+    """Test user update."""
+    # noinspection PyUnresolvedReferences
+    user = api_client_auth._user
+    data = {
+        'first_name': 'Quentin',
+        'last_name': 'Tarantino',
+    }
+    response = api_client_auth.patch(get_user_url(user.pk), data)
+    assert_response(response, 200, UserSerializer(instance=user).data | data)

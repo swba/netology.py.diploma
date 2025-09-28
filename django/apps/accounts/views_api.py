@@ -13,6 +13,8 @@ class AccountViewSet(mixins.CreateModelMixin,
                      mixins.UpdateModelMixin,
                      GenericViewSet):
 
+    http_method_names = ['get', 'post', 'patch']
+
     serializer_class = UserSerializer
     queryset = get_user_model().objects.all()
     permission_classes = (AccountPermission | IsAdminUser,)

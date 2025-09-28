@@ -51,6 +51,7 @@ def model_make_factory(model):
         return baker.make(
             model,
             *args,
+            _fill_optional=True,
             **kwargs
         )
     return factory
@@ -61,6 +62,7 @@ def model_prepare_factory(model):
         return baker.prepare(
             model,
             *args,
+            _fill_optional=True,
             **kwargs
         )
     return factory
