@@ -13,7 +13,10 @@ def test_product_search__all(api_client: APIClient, catalog_factory):
     url = get_product_url()
 
     response = api_client.get(url)
-    assert_response_count(response, 200, Product.objects.count())
+    assert_response_count(
+        response, 200,
+        len(Product.objects.all().paginate().get_page(1))
+    )
 
 @pytest.mark.django_db
 def test_product_search__title(api_client: APIClient, catalog_factory):
@@ -27,7 +30,7 @@ def test_product_search__title(api_client: APIClient, catalog_factory):
         response = api_client.get(url, {'title': query})
         assert_response_count(
             response, 200,
-            Product.objects.filter(title__icontains=query).count()
+            len(Product.objects.filter(title__icontains=query).paginate().get_page(1))
         )
 
 @pytest.mark.django_db
@@ -40,7 +43,7 @@ def test_product_search__category(api_client: APIClient, catalog_factory):
         response = api_client.get(url, {'category': category.pk})
         assert_response_count(
             response, 200,
-            Product.objects.filter(category=category.pk).count()
+            len(Product.objects.filter(category=category.pk).paginate().get_page(1))
         )
 
 @pytest.mark.django_db
@@ -53,7 +56,7 @@ def test_product_search__seller(api_client: APIClient, catalog_factory):
         response = api_client.get(url, {'seller': seller.pk})
         assert_response_count(
             response, 200,
-            Product.objects.filter(seller=seller.pk).count()
+            len(Product.objects.filter(seller=seller.pk).paginate().get_page(1))
         )
 
 @pytest.mark.django_db
@@ -68,20 +71,24 @@ def test_product_search__price(api_client: APIClient, catalog_factory):
     response = api_client.get(url, {'price_min': p1})
     assert_response_count(
         response, 200,
-        Product.objects.filter(list_price__gte=p1).count()
+        len(Product.objects.filter(list_price__gte=p1).paginate().get_page(1))
     )
 
     # Check maximum price.
     response = api_client.get(url, {'price_max': p2})
     assert_response_count(
         response, 200,
-        Product.objects.filter(list_price__lte=p2).count())
+        len(Product.objects.filter(list_price__lte=p2).paginate().get_page(1))
+    )
 
     # Check price range.
     response = api_client.get(url, {'price_min': p1, 'price_max': p2})
     assert_response_count(
         response, 200,
-        Product.objects.filter(list_price__gte=p1, list_price__lte=p2).count()
+        len(Product.objects.filter(
+            list_price__gte=p1,
+            list_price__lte=p2
+        ).paginate().get_page(1))
     )
 
 @pytest.mark.django_db
@@ -101,10 +108,10 @@ def test_product_search__complex(api_client: APIClient, catalog_factory):
             })
             assert_response_count(
                 response, 200,
-                Product.objects.filter(
+                len(Product.objects.filter(
                     category=category.pk,
                     seller=seller.pk,
                     list_price__gte=p1,
                     list_price__lte=p2
-                ).count()
+                ).paginate().get_page(1))
             )
