@@ -12,6 +12,7 @@ class AccountViewSet(mixins.CreateModelMixin,
                      mixins.RetrieveModelMixin,
                      mixins.UpdateModelMixin,
                      GenericViewSet):
+    """View set to create (register), retrieve and update accounts."""
 
     http_method_names = ['get', 'post', 'patch']
 
