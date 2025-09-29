@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 
 from apps.base.models import LoggableModel, PhoneField, DeletableModel
 
-from .manager import ProductCardManager, LineItemManager
+from .manager import ProductManager, LineItemManager
 
 
 class BaseShopModel(LoggableModel, DeletableModel):
@@ -133,10 +133,7 @@ class Category(BaseCatalogModel):
 class Product(BaseCatalogModel):
     """Base product model.
 
-    Base product cards are global, i.e. do not belong to any seller.
-    This model contains only the very base product information; more
-    product data (related to a seller, though) can be found in the
-    ProductCard model.
+    Unlike categories, products belong to specific sellers.
     """
 
     category = models.ForeignKey(
@@ -144,6 +141,29 @@ class Product(BaseCatalogModel):
         on_delete=models.CASCADE,
         related_name='products',
         verbose_name=_("Category"))
+    seller = models.ForeignKey(
+        Seller,
+        on_delete=models.CASCADE,
+        related_name='products',
+        verbose_name=_("Seller"))
+    external_id = models.PositiveBigIntegerField(
+        null=True,
+        blank=True,
+        verbose_name=_("External ID"))
+    model = models.CharField(
+        max_length=255,
+        default='',
+        blank=True,
+        verbose_name=_("Model"))
+    quantity = models.PositiveIntegerField(
+        default=0,
+        verbose_name=_("Quantity"))
+    price = models.PositiveIntegerField(
+        verbose_name=_("Price"))
+    list_price = models.PositiveIntegerField(
+        verbose_name=_("List Price"))
+
+    objects = ProductManager()
 
     class Meta:
         verbose_name = _("Product")
@@ -155,102 +175,41 @@ class Product(BaseCatalogModel):
                 name='unique_product'),
         ]
 
-
-class ProductCard(BaseShopModel):
-    """Product card model.
-
-    Unlike categories and products, product cards belong to specific
-    sellers.
-    """
-
-    seller = models.ForeignKey(
-        Seller,
-        on_delete=models.CASCADE,
-        related_name='products',
-        verbose_name=_("Seller"))
-    product = models.ForeignKey(
-        Product,
-        on_delete=models.CASCADE,
-        related_name='cards',
-        verbose_name=_("Product"))
-    external_id = models.PositiveBigIntegerField(
-        null=True,
-        blank=True,
-        verbose_name=_("External ID"))
-    code = models.CharField(
-        max_length=255,
-        default='',
-        blank=True,
-        verbose_name=_("Code"))
-    quantity = models.PositiveIntegerField(
-        default=0,
-        verbose_name=_("Quantity"))
-    price = models.PositiveIntegerField(
-        verbose_name=_("Price"))
-    list_price = models.PositiveIntegerField(
-        verbose_name=_("List Price"))
-
-    objects = ProductCardManager()
-
-    class Meta:
-        verbose_name = _("Product")
-        verbose_name_plural = _("Products")
-        ordering = ('product__title',)
-        constraints = [
-            models.UniqueConstraint(
-                fields=['seller', 'product'],
-                name='unique_seller_product'),
-        ]
-
-    def __str__(self):
-        return self.product.title
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # self.slug is already created form self.title. Add unique
+        # seller ID to the product slug.
+        self.slug += f"-{self.seller.pk}"
 
 
 class ProductParameter(models.Model):
     """Custom product parameter."""
 
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name='parameters',
+        verbose_name=_("Product"))
     name = models.CharField(
         max_length=50,
         unique=True,
-        verbose_name=_("Parameter Name"))
-
-    class Meta:
-        verbose_name = _("Product Parameter")
-        verbose_name_plural = _("Product Parameters")
-        ordering = ('name',)
-
-    def __str__(self):
-        return self.name
-
-
-class ProductCardParameterValue(models.Model):
-    """Custom product card parameter value."""
-
-    parameter = models.ForeignKey(
-        ProductParameter,
-        on_delete=models.CASCADE,
-        related_name='values',
-        verbose_name=_("Parameter"))
-    product_card = models.ForeignKey(
-        ProductCard,
-        on_delete=models.CASCADE,
-        related_name='parameters',
-        verbose_name=_("Product Card"))
+        verbose_name=_("Name"))
     value = models.CharField(
         max_length=100,
         verbose_name=_("Value"))
 
     class Meta:
-        verbose_name = _("Product Parameter Value")
-        verbose_name_plural = _("Product Parameter Values")
+        verbose_name = _("Product Parameter")
+        verbose_name_plural = _("Product Parameters")
+        ordering = ('name',)
         constraints = [
             models.UniqueConstraint(
-                fields=('parameter', 'product_card'),
+                fields=('product', 'name'),
                 name='unique_product_parameter')
         ]
 
     def __str__(self):
-        return self.value
+        return self.name
 
 
 class Order(BaseShopModel):
@@ -285,13 +244,13 @@ class Order(BaseShopModel):
 class BaseLineItem(models.Model):
     """Base abstract model for order and cart line items.
 
-    A line item is just a pair of a product (card) and its quantity.
+    A line item is just a pair of a product and its quantity.
     """
 
-    product_card = models.ForeignKey(
-        ProductCard,
+    product = models.ForeignKey(
+        Product,
         on_delete=models.CASCADE,
-        verbose_name=_("Product Card"))
+        verbose_name=_("Product"))
     quantity = models.PositiveIntegerField(
         default=1,
         verbose_name=_("Quantity"))
@@ -302,11 +261,11 @@ class BaseLineItem(models.Model):
         abstract = True
 
     def __str__(self):
-        return self.product_card.product.title
+        return self.product.title
 
     @property
     def total(self):
-        return self.product_card.list_price * self.quantity
+        return self.product.list_price * self.quantity
 
 
 class OrderLineItem(BaseLineItem):
