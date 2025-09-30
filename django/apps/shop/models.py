@@ -280,6 +280,11 @@ class OrderLineItem(BaseLineItem):
     class Meta:
         verbose_name = _("Order Line Item")
         verbose_name_plural = _("Order Line Items")
+        constraints = [
+            models.UniqueConstraint(
+                fields=('order', 'product'),
+                name='unique_order_product')
+        ]
 
 
 class CartLineItem(BaseLineItem):
@@ -294,3 +299,8 @@ class CartLineItem(BaseLineItem):
     class Meta:
         verbose_name = _("Cart Line Item")
         verbose_name_plural = _("Cart Line Items")
+        constraints = [
+            models.UniqueConstraint(
+                fields=('user', 'product'),
+                name='unique_user_product')
+        ]
