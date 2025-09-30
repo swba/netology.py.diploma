@@ -63,19 +63,21 @@ def catalog_factory(user_make_factory):
     seller_factory = model_make_factory(Seller)
     category_factory = model_make_factory(Category)
     product_factory = model_make_factory(Product)
-    def factory():
+    def factory(min_objects: int = 5, max_objects: int = 10):
         def add_products(category: Category):
             products = product_factory(
                 seller=random.choice(sellers),
-                _quantity=random.randint(5, 10)
+                _quantity=random.randint(min_objects, max_objects)
             )
             category.products.add(*products)
         sellers = seller_factory(
             user=user_make_factory(),
             is_active=True,
-            _quantity=random.randint(5, 10)
+            _quantity=random.randint(min_objects, max_objects)
         )
-        categories = category_factory(_quantity=random.randint(5, 10))
+        categories = category_factory(
+            _quantity=random.randint(min_objects, max_objects)
+        )
         if type(categories) is list:
             for cat in categories:
                 add_products(cat)

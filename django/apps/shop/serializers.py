@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Category, Seller, Product
+from .models import Category, Seller, Product, CartLineItem
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -32,3 +32,34 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'slug', 'category', 'seller', 'model',
                   'quantity', 'list_price')
         read_only_fields = ('id', 'slug')
+
+
+class LineItemProductSerializer(serializers.ModelSerializer):
+    """Product serializer for line items."""
+
+    class Meta:
+        model = Product
+        fields = ('id', 'title', 'slug', 'list_price')
+        read_only_fields = ('id', 'title', 'list_price')
+
+
+class CartLineItemSerializer(serializers.ModelSerializer):
+    """General cart line item serializer."""
+
+    product = LineItemProductSerializer(read_only=True)
+
+    class Meta:
+        model = CartLineItem
+        fields = ('id', 'product', 'quantity')
+        read_only_fields = ('id',)
+
+
+class CartLineItemCreateSerializer(CartLineItemSerializer):
+    """Cart item serializer for create action."""
+
+    product_id = serializers.IntegerField(
+        min_value=1,
+        write_only=True)
+
+    class Meta(CartLineItemSerializer.Meta):
+        fields = ('id', 'product_id', 'product', 'quantity')

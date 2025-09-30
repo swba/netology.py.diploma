@@ -15,9 +15,6 @@ from apps.shop.models import Product
 def get_user_url(pk: int = None) -> str:
     """Returns user endpoint URL.
 
-    If user ID (pk) is specified, URL of the user detail endpoint is
-    returned; otherwise, URL of the user list endpoint is returned.
-
     Args:
         pk: (optional) User ID.
 
@@ -45,9 +42,6 @@ def get_token_url(action: Literal['refresh', 'verify'] | None = None) -> str:
 def get_product_url(pk=None):
     """Returns product endpoint URL.
 
-    If product ID (pk) is specified, URL of the product detail endpoint
-    is returned; otherwise, URL of the product list endpoint is returned.
-
     Args:
         pk: (optional) Product ID.
 
@@ -58,7 +52,23 @@ def get_product_url(pk=None):
         return reverse('api.shop:product-detail', kwargs={'pk': pk})
     return reverse('api.shop:product-list')
 
-def assert_response(response: Response, status: int, json: dict):
+def get_cart_url(pk=None):
+    """Returns cart endpoint URL.
+
+    Args:
+        pk: (optional) Cart line item ID.
+
+    Returns:
+        Endpoint URL.
+    """
+    if not pk:
+        return reverse('api.shop:cartlineitem-list')
+    elif pk == 'clear':
+        return reverse('api.shop:cartlineitem-clear')
+    else:
+        return reverse('api.shop:cartlineitem-detail', kwargs={'pk': pk})
+
+def assert_response(response: Response, status: int, json: dict|list):
     """Asserts API response.
 
     Args:
