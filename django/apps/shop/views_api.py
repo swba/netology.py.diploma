@@ -5,14 +5,16 @@ from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.viewsets import GenericViewSet
+from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
 from .filters import ProductFilter
-from .models import Product, CartLineItem
+from .models import Product, CartLineItem, ShippingAddress
+from .permissions import ShippingAddressPermission
 from .serializers import (
     ProductSerializer,
-    CartLineItemSerializer,
-    CartLineItemCreateSerializer
+    LineItemSerializer,
+    CartLineItemCreateSerializer,
+    ShippingAddressSerializer
 )
 
 
@@ -28,30 +30,30 @@ class ProductViewSet(mixins.ListModelMixin,
 
 
 @extend_schema_view(
-    list=extend_schema(description="Get the full cart."),
+    list=extend_schema(description="Get the current user's cart."),
     create=extend_schema(
-        description="Adds a new line item to the cart. Returns the full cart.",
+        description="Add a new line item to the current user's cart.",
         responses={
-            status.HTTP_201_CREATED: CartLineItemSerializer(many=True),
+            status.HTTP_201_CREATED: LineItemSerializer(many=True),
         }
     ),
     partial_update=extend_schema(
-        description="Updates a cart line item's quantity. Returns the full cart.",
+        description="Update a cart line item's quantity.",
         responses={
-            status.HTTP_200_OK: CartLineItemSerializer(many=True),
+            status.HTTP_200_OK: LineItemSerializer(many=True),
         }
     ),
     destroy=extend_schema(
-        description="Deletes a cart line item. Returns the full cart.",
+        description="Delete a cart line item.",
         responses={
-            status.HTTP_200_OK: CartLineItemSerializer(many=True),
+            status.HTTP_200_OK: LineItemSerializer(many=True),
         }
     ),
     clear=extend_schema(
         operation_id='cart_clear',
-        description="Clears the cart.",
+        description="Clears the current user's cart.",
         responses={
-            status.HTTP_200_OK: CartLineItemSerializer(many=True),
+            status.HTTP_200_OK: LineItemSerializer(many=True),
         }
     )
 )
@@ -64,7 +66,7 @@ class CartLineItemViewSet(mixins.CreateModelMixin,
     """
     http_method_names = ['get', 'post', 'patch', 'delete']
 
-    serializer_class = CartLineItemSerializer
+    serializer_class = LineItemSerializer
     queryset = CartLineItem.objects.all()
     permission_classes = (IsAuthenticated,)
 
@@ -114,3 +116,33 @@ class CartLineItemViewSet(mixins.CreateModelMixin,
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data, status=status_code)
+
+
+@extend_schema_view(
+    list=extend_schema(description="Get a list of shipping addresses."),
+    retrieve=extend_schema(description="Get a shipping addresses details."),
+    create=extend_schema(description="Add a new shipping address."),
+    partial_update=extend_schema(description="Update a shipping address."),
+    destroy=extend_schema(description="Delete a shipping address.")
+)
+class ShippingAddressViewSet(ModelViewSet):
+    """View set for shipping addresses.
+
+    Shipping addresses cannot be updated or deleted, if there are
+    related orders. To edit a shipping address, all related orders
+    must be removed or unbound first.
+    """
+
+    http_method_names = ['get', 'post', 'patch', 'delete']
+
+    serializer_class = ShippingAddressSerializer
+    queryset = ShippingAddress.objects.all()
+    permission_classes = (ShippingAddressPermission,)
+
+    def get_queryset(self):
+        # Always work with the current user.
+        return super().get_queryset().filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        # Always create shipping addresses for the current user.
+        serializer.save(user=self.request.user)

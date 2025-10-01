@@ -8,10 +8,10 @@ from tests.utils import assert_response, generate_password, get_user_url
 
 
 @pytest.mark.django_db
-def test_user_register__password_missing(api_client: APIClient, user_prepare_factory):
+def test_user_register__password_missing(api_client: APIClient, user_factory):
     """Test user registration (missing password)."""
     response = api_client.post(get_user_url(), {
-        'email': user_prepare_factory().email,
+        'email': user_factory(_save=False).email,
     })
     assert_response(response, 400, {
         'password': ["This field is required."]
@@ -28,10 +28,10 @@ def test_user_register__email_missing(api_client):
     })
 
 @pytest.mark.django_db
-def test_user_register__password_empty(api_client: APIClient, user_prepare_factory):
+def test_user_register__password_empty(api_client: APIClient, user_factory):
     """Test user registration (empty password)."""
     response = api_client.post(get_user_url(), {
-        'email': user_prepare_factory().email,
+        'email': user_factory(_save=False).email,
         'password': '',
     })
     assert_response(response, 400, {
@@ -39,10 +39,10 @@ def test_user_register__password_empty(api_client: APIClient, user_prepare_facto
     })
 
 @pytest.mark.django_db
-def test_user_register__password_simple(api_client: APIClient, user_prepare_factory):
+def test_user_register__password_simple(api_client: APIClient, user_factory):
     """Test user registration (one-digit password)."""
     response = api_client.post(get_user_url(), {
-        'email': user_prepare_factory().email,
+        'email': user_factory(_save=False).email,
         'password': '1',
     })
     assert_response(response, 400, {
@@ -54,10 +54,10 @@ def test_user_register__password_simple(api_client: APIClient, user_prepare_fact
     })
 
 @pytest.mark.django_db
-def test_user_register__password_common_numeric(api_client: APIClient, user_prepare_factory):
+def test_user_register__password_common_numeric(api_client: APIClient, user_factory):
     """Test user registration (common numeric password)."""
     response = api_client.post(get_user_url(), {
-        'email': user_prepare_factory().email,
+        'email': user_factory(_save=False).email,
         'password': '1234567890',
     })
     assert_response(response, 400, {
@@ -68,10 +68,10 @@ def test_user_register__password_common_numeric(api_client: APIClient, user_prep
     })
 
 @pytest.mark.django_db
-def test_user_register__password_common_alpha(api_client: APIClient, user_prepare_factory):
+def test_user_register__password_common_alpha(api_client: APIClient, user_factory):
     """Test user registration (common alpha password)."""
     response = api_client.post(get_user_url(), {
-        'email': user_prepare_factory().email,
+        'email': user_factory(_save=False).email,
         'password': 'qwertyui',
     })
     assert_response(response, 400, {
@@ -94,11 +94,10 @@ def test_user_register__password_similar_to_email(api_client: APIClient):
     })
 
 @pytest.mark.django_db
-def test_user_register__bare_minimum(api_client: APIClient, user_prepare_factory):
+def test_user_register__bare_minimum(api_client: APIClient, user_factory):
     """Test user registration (just email and password)."""
-    user = user_prepare_factory()
     data = {
-        'email': user.email,
+        'email': user_factory(_save=False).email,
     }
     password = generate_password()
     response = api_client.post(get_user_url(), data | {
@@ -111,9 +110,9 @@ def test_user_register__bare_minimum(api_client: APIClient, user_prepare_factory
     })
 
 @pytest.mark.django_db
-def test_user_register(api_client: APIClient, user_prepare_factory):
+def test_user_register(api_client: APIClient, user_factory):
     """Test user registration (full data)."""
-    user: User = user_prepare_factory()
+    user: User = user_factory(_save=False)
     data = {
         'email': user.email,
         'first_name': user.first_name,
@@ -128,9 +127,9 @@ def test_user_register(api_client: APIClient, user_prepare_factory):
     })
 
 @pytest.mark.django_db
-def test_user_register__exists(api_client: APIClient, user_make_factory):
+def test_user_register__exists(api_client: APIClient, user_factory):
     """Test user registration (existing user)."""
-    user = user_make_factory()
+    user = user_factory()
     response = api_client.post(get_user_url(), {
         'email': user.email,
         'password': generate_password(),
@@ -140,18 +139,18 @@ def test_user_register__exists(api_client: APIClient, user_make_factory):
     })
 
 @pytest.mark.django_db
-def test_user_get__anonymous(api_client: APIClient, user_make_factory):
+def test_user_get__anonymous(api_client: APIClient, user_factory):
     """Test user retrieve (anonymous request)."""
-    user = user_make_factory()
+    user = user_factory()
     response = api_client.get(get_user_url(user.pk))
     assert_response(response, 401, {
         'detail': "Authentication credentials were not provided."
     })
 
 @pytest.mark.django_db
-def test_user_get__wrong_token(api_client: APIClient, user_make_factory):
+def test_user_get__wrong_token(api_client: APIClient, user_factory):
     """Test user retrieve (incorrect access token)."""
-    user = user_make_factory()
+    user = user_factory()
     api_client.credentials(HTTP_AUTHORIZATION='Bearer TralaleroTralala')
     response = api_client.get(get_user_url(user.pk))
     assert_response(response, 401, {
@@ -165,9 +164,9 @@ def test_user_get__wrong_token(api_client: APIClient, user_make_factory):
     })
 
 @pytest.mark.django_db
-def test_user_get__another_user(api_client_auth: APIClient, user_make_factory):
+def test_user_get__another_user(api_client_auth: APIClient, user_factory):
     """Test user retrieve (as another user)."""
-    user = user_make_factory()
+    user = user_factory()
     response = api_client_auth.get(get_user_url(user.pk))
     assert_response(response, 403, {
         'detail': "You do not have permission to perform this action."
@@ -182,9 +181,9 @@ def test_user_get(api_client_auth: APIClient):
     assert_response(response, 200, UserSerializer(instance=user).data)
 
 @pytest.mark.django_db
-def test_user_patch__anonymous(api_client: APIClient, user_make_factory):
+def test_user_patch__anonymous(api_client: APIClient, user_factory):
     """Test user update (anonymous request)."""
-    user = user_make_factory()
+    user = user_factory()
     data = UserSerializer(instance=user).data
     response = api_client.patch(get_user_url(user.pk), data)
     assert_response(response, 401, {
@@ -192,9 +191,9 @@ def test_user_patch__anonymous(api_client: APIClient, user_make_factory):
     })
 
 @pytest.mark.django_db
-def test_user_patch__another_user(api_client_auth: APIClient, user_make_factory):
+def test_user_patch__another_user(api_client_auth: APIClient, user_factory):
     """Test user update (as another user)."""
-    user = user_make_factory()
+    user = user_factory()
     data = UserSerializer(instance=user).data
     response = api_client_auth.patch(get_user_url(user.pk), data)
     assert_response(response, 403, {

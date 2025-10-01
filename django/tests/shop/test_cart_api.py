@@ -117,12 +117,12 @@ def test_cart_add__repeat(api_client_auth: APIClient, catalog_factory):
     })
 
 @pytest.mark.django_db
-def test_cart_add__several_users(api_client_auth: APIClient, catalog_factory, user_make_factory):
+def test_cart_add__several_users(api_client_auth: APIClient, catalog_factory, user_factory):
     """Test adding products to the cart (several users)."""
     catalog_factory(2, 4)
     url = get_cart_url()
 
-    users = [user_make_factory(), user_make_factory()]
+    users = [user_factory(), user_factory()]
     cart1 = []
 
     # Add all products to 3 carts (via API to the first one).

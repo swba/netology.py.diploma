@@ -1,6 +1,13 @@
 from rest_framework import serializers
 
-from .models import Category, Seller, Product, CartLineItem
+from .models import (
+    Category,
+    Seller,
+    Product,
+    CartLineItem,
+    ShippingAddress,
+    Order
+)
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -43,8 +50,8 @@ class LineItemProductSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'title', 'list_price')
 
 
-class CartLineItemSerializer(serializers.ModelSerializer):
-    """General cart line item serializer."""
+class LineItemSerializer(serializers.ModelSerializer):
+    """General serializer for order and cart line items."""
 
     product = LineItemProductSerializer(read_only=True)
 
@@ -54,12 +61,34 @@ class CartLineItemSerializer(serializers.ModelSerializer):
         read_only_fields = ('id',)
 
 
-class CartLineItemCreateSerializer(CartLineItemSerializer):
+class CartLineItemCreateSerializer(LineItemSerializer):
     """Cart item serializer for create action."""
 
-    product_id = serializers.IntegerField(
-        min_value=1,
-        write_only=True)
+    product_id = serializers.IntegerField(min_value=1, write_only=True)
 
-    class Meta(CartLineItemSerializer.Meta):
+    class Meta(LineItemSerializer.Meta):
         fields = ('id', 'product_id', 'product', 'quantity')
+
+
+class ShippingAddressSerializer(serializers.ModelSerializer):
+    """Shipping address serializer."""
+
+    class Meta:
+        model = ShippingAddress
+        fields = ('id', 'full_name', 'phone_number', 'street_address',
+                  'locality', 'administrative_area', 'postal_code', 'country')
+        read_only_fields = ('id',)
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    """Order serializer."""
+
+    shipping_address_id = serializers.IntegerField(min_value=1, write_only=True)
+    shipping_address = ShippingAddressSerializer(read_only=True)
+    line_items = LineItemSerializer(read_only=True, many=True)
+
+    class Meta:
+        model = Order
+        fields = ('id', 'shipping_address_id', 'shipping_address', 'status',
+                  'line_items')
+        read_only_fields = ('id',)
