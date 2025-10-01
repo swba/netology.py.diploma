@@ -224,7 +224,7 @@ class Order(BaseShopModel):
 
     shipping_address = models.ForeignKey(
         ShippingAddress,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         related_name='orders',
         verbose_name=_("Shipping Address"))
     status = models.CharField(
