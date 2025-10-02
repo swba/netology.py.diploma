@@ -41,6 +41,8 @@ class DeletableModel(models.Model):
 class PhoneField(models.CharField):
     """A phone field with validation."""
 
+    pattern = r'^\+[1-9]\d{10,12}$'
+
     def __init__(
             self,
             *args,
@@ -55,7 +57,7 @@ class PhoneField(models.CharField):
         self.default = default
         self.blank = blank
         self.help_text = help_text
-        self.validators = [RegexValidator(r'^\+[1-9]\d{10-12}$')]
+        self.validators = [RegexValidator(self.pattern)]
 
     @staticmethod
     def format(value):

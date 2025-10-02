@@ -2,14 +2,29 @@ import random
 
 # noinspection PyPackageRequirements
 import pytest
+# noinspection PyPackageRequirements
+import rstr
 from django.contrib.auth import get_user_model
 # noinspection PyPackageRequirements
 from model_bakery import baker
 from rest_framework.test import APIClient
 
-from apps.shop.models import Category, Product, Seller, ShippingAddress, Order
+from apps.base.models import PhoneField
+from apps.shop.models import (
+    Category,
+    Product,
+    Seller,
+    ShippingAddress,
+    Order,
+    CartLineItem
+)
 
 from .utils import generate_password, user_make_and_login
+
+
+def generate_phone_number() -> str:
+    """Generates a random phone number."""
+    return rstr.xeger(PhoneField.pattern)
 
 
 @pytest.fixture
@@ -85,12 +100,28 @@ def catalog_factory(user_factory):
 @pytest.fixture(scope='session')
 def shipping_address_factory():
     """Returns a factory to make shipping address instances."""
-    return model_factory(ShippingAddress)
+    f = model_factory(ShippingAddress)
+    # Create one more factory wrapper around a factory to add a random
+    # pone number to shipping address(es) being generated. Approach
+    # with `baker.generators.add()` doesn't work because PhoneNumber
+    # field has default value which is always used by model_bakery
+    # unless is overwritten manually.
+    def factory(*args, **kwargs):
+        _kwargs = {**kwargs}
+        if 'phone_number' not in _kwargs:
+            _kwargs['phone_number'] = generate_phone_number()
+        return f(*args, **_kwargs)
+    return factory
 
 @pytest.fixture(scope='session')
 def order_factory():
     """Returns a factory to make order instances."""
     return model_factory(Order)
+
+@pytest.fixture(scope='session')
+def cart_line_item_factory():
+    """Returns a factory to make cart line items."""
+    return model_factory(CartLineItem)
 
 def model_factory(model):
     """Returns a factory to make or prepare model instances."""

@@ -37,6 +37,24 @@ def test_shipping_address_add__partial_data(api_client_auth):
     })
 
 @pytest.mark.django_db
+def test_shipping_address_add__wrong_phone(api_client_auth, shipping_address_factory):
+    """Test adding a shipping address (incorrect phone number format)."""
+    sa = shipping_address_factory(_save=False)
+    data = {
+        'full_name': sa.full_name,
+        'phone_number': '223322223322',
+        'street_address': sa.street_address,
+        'locality': sa.locality,
+        'administrative_area': sa.administrative_area,
+        'postal_code': sa.postal_code,
+        'country': sa.country,
+    }
+    response = api_client_auth.post(get_shipping_address_url(), data)
+    assert_response(response, 400, {
+        'phone_number': ["Enter a valid value."],
+    })
+
+@pytest.mark.django_db
 def test_shipping_address_add(api_client_auth, shipping_address_factory):
     """Test adding a shipping address."""
     sa = shipping_address_factory(_save=False)
