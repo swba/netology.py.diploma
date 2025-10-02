@@ -11,16 +11,30 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
 from .filters import ProductFilter
-from .models import Product, CartLineItem, ShippingAddress, Order
+from .models import Product, CartLineItem, ShippingAddress, Order, Category
 from .permissions import ShippingAddressPermission, OrderPermission
 from .serializers import (
+    CategorySerializer,
     ProductSerializer,
     LineItemSerializer,
     CartLineItemCreateSerializer,
     ShippingAddressSerializer,
     OrderSerializer,
-    OrderCreateSerializer
+    OrderCreateSerializer,
 )
+
+
+@extend_schema_view(
+    list=extend_schema(description="List all catalog categories."),
+    retrieve=extend_schema(description="Get category details."),
+)
+class CategoryViewSet(mixins.ListModelMixin,
+                      mixins.RetrieveModelMixin,
+                      GenericViewSet):
+    """View set to list and retrieve categories."""
+
+    serializer_class = CategorySerializer
+    queryset = Category.objects.all()
 
 
 class ProductViewSet(mixins.ListModelMixin,

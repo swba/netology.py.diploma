@@ -65,6 +65,11 @@ def api_client_auth(api_client, user_factory) -> APIClient:
     return api_client
 
 @pytest.fixture(scope='session')
+def category_factory():
+    """Returns a factory to make category instances."""
+    return model_factory(Category)
+
+@pytest.fixture(scope='session')
 def catalog_factory(user_factory):
     """Returns a factory for catalog (categories with products).
 
