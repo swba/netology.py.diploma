@@ -176,10 +176,9 @@ class Product(BaseCatalogModel):
         ]
 
     def save(self, *args, **kwargs):
+        # Add unique seller ID to the product slug.
+        self.slug = slugify(self.title) + f"-{self.seller.pk}"
         super().save(*args, **kwargs)
-        # self.slug is already created form self.title. Add unique
-        # seller ID to the product slug.
-        self.slug += f"-{self.seller.pk}"
 
 
 class ProductParameter(models.Model):

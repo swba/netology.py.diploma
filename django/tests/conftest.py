@@ -70,6 +70,11 @@ def category_factory():
     return model_factory(Category)
 
 @pytest.fixture(scope='session')
+def product_factory():
+    """Returns a factory to make product instances."""
+    return model_factory(Product)
+
+@pytest.fixture(scope='session')
 def catalog_factory(user_factory):
     """Returns a factory for catalog (categories with products).
 

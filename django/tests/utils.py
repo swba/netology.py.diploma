@@ -118,20 +118,6 @@ def assert_response(response: Response, status: int, json: dict|list):
     assert response.status_code == status
     assert response.data == json
 
-def assert_response_count(response: Response, status: int, count: int):
-    """Asserts count of items in API response.
-
-    Args:
-        response: API response.
-        status: Expected HTTP status code.
-        count: Expected count of items in JSON response.
-    """
-    assert response.status_code == status
-    if 'results' in response.data:
-        assert len(response.data['results']) == count
-    else:
-        assert len(response.data) == count
-
 def generate_password() -> str:
     """Generates an eight-character alphanumeric password."""
     alphabet = string.ascii_letters + string.digits
