@@ -81,6 +81,19 @@ def get_shipping_address_url(pk=None):
         return reverse('api.shop:shippingaddress-detail', kwargs={'pk': pk})
     return reverse('api.shop:shippingaddress-list')
 
+def get_order_url(pk=None):
+    """Returns order endpoint URL.
+
+    Args:
+        pk: (optional) Order ID.
+
+    Returns:
+        Endpoint URL.
+    """
+    if pk:
+        return reverse('api.shop:order-detail', kwargs={'pk': pk})
+    return reverse('api.shop:order-list')
+
 def assert_response(response: Response, status: int, json: dict|list):
     """Asserts API response.
 

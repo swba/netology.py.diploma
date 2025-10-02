@@ -5,7 +5,8 @@ from rest_framework.routers import DefaultRouter
 from .views_api import (
     ProductViewSet,
     CartLineItemViewSet,
-    ShippingAddressViewSet
+    ShippingAddressViewSet,
+    OrderViewSet
 )
 
 app_name = 'api.shop'
@@ -19,8 +20,12 @@ cart_router.register('', CartLineItemViewSet)
 shipping_address_router = DefaultRouter()
 shipping_address_router.register('', ShippingAddressViewSet)
 
+order_router = DefaultRouter()
+order_router.register('', OrderViewSet)
+
 urlpatterns = [
     path('products/', include(product_router.urls)),
     path('cart/', include(cart_router.urls)),
     path('shipping-addresses/', include(shipping_address_router.urls)),
+    path('orders/', include(order_router.urls)),
 ]

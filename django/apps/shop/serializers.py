@@ -80,15 +80,30 @@ class ShippingAddressSerializer(serializers.ModelSerializer):
         read_only_fields = ('id',)
 
 
+class OrderCreateSerializer(serializers.Serializer):
+    """Serializer for order create endpoint."""
+
+    shipping_address_id = serializers.IntegerField(min_value=1, write_only=True)
+
+
 class OrderSerializer(serializers.ModelSerializer):
     """Order serializer."""
 
-    shipping_address_id = serializers.IntegerField(min_value=1, write_only=True)
+    seller = SellerSerializer(read_only=True)
     shipping_address = ShippingAddressSerializer(read_only=True)
     line_items = LineItemSerializer(read_only=True, many=True)
 
     class Meta:
         model = Order
-        fields = ('id', 'shipping_address_id', 'shipping_address', 'status',
-                  'line_items')
+        fields = ('id', 'seller', 'shipping_address', 'status', 'line_items')
         read_only_fields = ('id',)
+
+    def validate_status(self, value):
+        """Validates order status."""
+        if self.instance:
+            allowed_statuses = Order.status_workflow[self.instance.status]
+            if value not in allowed_statuses:
+                raise serializers.ValidationError(
+                    f"Allowed statuses: {', '.join(allowed_statuses)}"
+                )
+        return value

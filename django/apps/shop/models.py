@@ -215,12 +215,12 @@ class ProductParameter(models.Model):
 class Order(BaseShopModel):
     """Customer's order."""
 
-    class OrderStatus(models.TextChoices):
-        PENDING = 'Pending', _('Pending')
-        CONFIRMED = 'Confirmed', _('Confirmed')
-        SHIPPING = 'Shipping', _('Shipping')
-        COMPLETED = 'Completed', _('Completed')
-        CANCELED = 'Canceled', _('Canceled')
+    class Status(models.TextChoices):
+        PENDING = 'Pending', _("Pending")
+        CONFIRMED = 'Confirmed', _("Confirmed")
+        SHIPPING = 'Shipping', _("Shipping")
+        COMPLETED = 'Completed', _("Completed")
+        CANCELED = 'Canceled', _("Canceled")
 
     seller = models.ForeignKey(
         Seller,
@@ -234,8 +234,16 @@ class Order(BaseShopModel):
         verbose_name=_("Shipping Address"))
     status = models.CharField(
         max_length=10,
-        choices=OrderStatus,
-        default=OrderStatus.PENDING)
+        choices=Status,
+        default=Status.PENDING)
+
+    status_workflow = {
+        Status.PENDING: (Status.CONFIRMED, Status.CANCELED),
+        Status.CONFIRMED: (Status.SHIPPING, Status.CANCELED),
+        Status.SHIPPING: (Status.COMPLETED, Status.CANCELED,),
+        Status.COMPLETED: (),
+        Status.CANCELED: ()
+    }
 
     class Meta:
         verbose_name = _("Order")

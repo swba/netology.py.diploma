@@ -16,7 +16,8 @@ from apps.shop.models import (
     Seller,
     ShippingAddress,
     Order,
-    CartLineItem
+    CartLineItem,
+    OrderLineItem
 )
 
 from .utils import generate_password, user_make_and_login
@@ -114,14 +115,28 @@ def shipping_address_factory():
     return factory
 
 @pytest.fixture(scope='session')
-def order_factory():
+def order_factory(cart_line_item_factory):
     """Returns a factory to make order instances."""
-    return model_factory(Order)
+    f = model_factory(Order)
+    line_item_factory = model_factory(OrderLineItem)
+    def factory(*args, _save=True, **kwargs):
+        return f(
+            *args,
+            line_items=line_item_factory(_quantity=3),
+            _save=_save,
+            **kwargs
+        )
+    return factory
 
 @pytest.fixture(scope='session')
 def cart_line_item_factory():
     """Returns a factory to make cart line items."""
     return model_factory(CartLineItem)
+
+@pytest.fixture(scope='session')
+def seller_factory():
+    """Returns a factory to make seller instances."""
+    return model_factory(Seller)
 
 def model_factory(model):
     """Returns a factory to make or prepare model instances."""
