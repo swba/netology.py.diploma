@@ -222,6 +222,11 @@ class Order(BaseShopModel):
         COMPLETED = 'Completed', _('Completed')
         CANCELED = 'Canceled', _('Canceled')
 
+    seller = models.ForeignKey(
+        Seller,
+        on_delete=models.CASCADE,
+        related_name='orders',
+        verbose_name=_("Seller"))
     shipping_address = models.ForeignKey(
         ShippingAddress,
         on_delete=models.PROTECT,
