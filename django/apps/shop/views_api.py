@@ -215,7 +215,7 @@ class OrderViewSet(mixins.ListModelMixin,
                 Q(shipping_address__user=self.request.user)
             )
 
-    # noinspection PyMethodMayBeStatic
+    # noinspection PyMethodMayBeStatic,PyUnusedLocal
     def create(self, request, *args, **kwargs):
         serializer = OrderCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -241,11 +241,22 @@ class OrderViewSet(mixins.ListModelMixin,
         cart = (CartLineItem.objects.filter(user=self.request.user)
                 .select_related('product'))
 
-        # Check if product quantities are still valid.
-        exceedances = []
+        # Check if product sellers are still active and  quantities are
+        # still valid.
+        exceedances, inactives = [], []
         for cart_line_item in cart: # type: CartLineItem
+            if not cart_line_item.product.seller.is_active:
+                inactives.append(cart_line_item.product)
             if cart_line_item.quantity > cart_line_item.product.quantity:
                 exceedances.append(cart_line_item.product)
+        if inactives:
+            return Response(
+                {
+                    'detail': "Seller is not active.",
+                    'products': ProductSerializer(inactives, many=True).data,
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
         if exceedances:
             return Response(
                 {

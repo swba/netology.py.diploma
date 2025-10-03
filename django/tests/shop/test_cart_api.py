@@ -95,6 +95,21 @@ def test_cart_add__too_many(api_client_auth: APIClient, product_factory):
     })
 
 @pytest.mark.django_db
+def test_cart_add__seller_inactive(api_client_auth: APIClient, seller_factory,
+        product_factory):
+    """Test adding products to the cart (seller is inactive)."""
+    seller = seller_factory(is_active=False)
+    product = product_factory(seller=seller)
+    url = get_cart_url()
+
+    response = api_client_auth.post(url, {
+        'product_id': product.pk,
+    })
+    assert_response(response, 400, {
+        'product_id': ["Seller is not active."]
+    })
+
+@pytest.mark.django_db
 def test_cart_add__multiple(api_client_auth: APIClient, catalog_factory):
     """Test adding products to the cart (multiple products)."""
     catalog_factory(2, 2)
@@ -187,6 +202,22 @@ def test_cart_update__too_many(api_client_auth: APIClient,
     })
     assert_response(response, 400, {
         'quantity': ["Quantity exceeds the stock."]
+    })
+
+@pytest.mark.django_db
+def test_cart_update__seller_inactive(api_client_auth: APIClient,
+        seller_factory, product_factory, cart_line_item_factory):
+    """Test updating products to the cart (seller is inactive)."""
+    seller = seller_factory(is_active=False)
+    product = product_factory(seller=seller)
+    # noinspection PyUnresolvedReferences
+    item = cart_line_item_factory(user=api_client_auth._user, product=product)
+
+    response = api_client_auth.patch(get_cart_url(item.pk), {
+        'quantity': 1
+    })
+    assert_response(response, 400, {
+        'product': ["Seller is not active."]
     })
 
 @pytest.mark.django_db

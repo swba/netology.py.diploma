@@ -76,10 +76,9 @@ def product_factory():
     def factory(*args, **kwargs):
         # Default product quantity is zero, so ensure we have something
         # in the stock.
-        return f(*args, **{
-            'quantity': random.randint(100, 500),
-            **kwargs
-        })
+        if 'quantity' not in kwargs:
+            kwargs['quantity'] = random.randint(100, 500)
+        return f(*args, **kwargs)
     return factory
 
 @pytest.fixture(scope='session')
@@ -135,14 +134,9 @@ def order_factory(cart_line_item_factory):
     f = model_factory(Order)
     line_item_factory = model_factory(OrderLineItem)
     def factory(*args, _save=True, **kwargs):
-        return f(
-            *args,
-            **{
-                'line_items': line_item_factory(_quantity=3),
-                '_save': _save,
-                **kwargs
-            }
-        )
+        if 'line_items' not in kwargs:
+            kwargs['line_items'] = line_item_factory(_quantity=3)
+        return f(*args, _save=True, **kwargs)
     return factory
 
 @pytest.fixture(scope='session')
@@ -158,22 +152,10 @@ def seller_factory():
 def model_factory(model):
     """Returns a factory to make or prepare model instances."""
     def factory(*args, _save=True, **kwargs):
+        if '_fill_optional' not in kwargs:
+            kwargs['_fill_optional'] = True
         if _save:
-            return baker.make(
-                model,
-                *args,
-                **{
-                    '_fill_optional': True,
-                    **kwargs
-                }
-            )
+            return baker.make(model, *args, **kwargs)
         else:
-            return baker.prepare(
-                model,
-                *args,
-                **{
-                    '_fill_optional': True,
-                    **kwargs
-                }
-            )
+            return baker.prepare(model, *args, **kwargs)
     return factory

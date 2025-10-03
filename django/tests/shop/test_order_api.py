@@ -79,6 +79,32 @@ def test_order_create__too_many(api_client_auth, product_factory,
     })
 
 @pytest.mark.django_db
+def test_order_create__seller_inactive(api_client_auth, seller_factory,
+        product_factory, cart_line_item_factory, shipping_address_factory):
+    """Test creating an order (product seller is not active)."""
+    seller = seller_factory()
+    product = product_factory(seller=seller)
+    # noinspection PyUnresolvedReferences
+    cart_line_item_factory(
+        user=api_client_auth._user,
+        product=product,
+        quantity=product.quantity
+    )
+
+    seller.is_active = False
+    seller.save()
+
+    # noinspection PyUnresolvedReferences
+    sa = shipping_address_factory(user=api_client_auth._user)
+    response = api_client_auth.post(get_order_url(), {
+        'shipping_address_id': sa.id,
+    })
+    assert_response(response, 400, {
+        'detail': "Seller is not active.",
+        'products': ProductSerializer([product], many=True).data,
+    })
+
+@pytest.mark.django_db
 def test_order_create(api_client_auth, user_factory, catalog_factory,
         shipping_address_factory, cart_line_item_factory):
     """Test creating an order."""
@@ -228,7 +254,6 @@ def test_order_edit__user(api_client_auth, order_factory,
     response = api_client_auth.patch(get_order_url(order.pk), {
         'status': Order.Status.CONFIRMED.value
     })
-    print(response.json())
     assert_response(response, 403, {
         'detail': "You do not have permission to perform this action."
     })

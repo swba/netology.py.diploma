@@ -61,6 +61,17 @@ class LineItemSerializer(serializers.ModelSerializer):
         read_only_fields = ('id',)
 
     def validate(self, attrs):
+        # Validate that the product's seller is still active.
+        if self.instance:
+            seller_is_active = Seller.objects.filter(
+                is_active=True,
+                products=self.instance.product
+            ).exists()
+            if not seller_is_active:
+                raise serializers.ValidationError({
+                    'product': "Seller is not active."
+                })
+
         # Validate quantity (cannot be greater than product stock).
         if quantity := attrs.get('quantity'):
             product = None
@@ -73,6 +84,7 @@ class LineItemSerializer(serializers.ModelSerializer):
                     raise serializers.ValidationError({
                         'quantity': "Quantity exceeds the stock."
                     })
+
         return super().validate(attrs)
 
 
@@ -83,6 +95,17 @@ class CartLineItemCreateSerializer(LineItemSerializer):
 
     class Meta(LineItemSerializer.Meta):
         fields = ('id', 'product_id', 'product', 'quantity')
+
+    # noinspection PyMethodMayBeStatic
+    def validate_product_id(self, value):
+        """Checks that product's seller is active."""
+        seller_is_active = Seller.objects.filter(
+            is_active=True,
+            products__id=value
+        ).exists()
+        if not seller_is_active:
+            raise serializers.ValidationError("Seller is not active.")
+        return value
 
 
 class ShippingAddressSerializer(serializers.ModelSerializer):
