@@ -80,6 +80,21 @@ def test_cart_add__no_quantity(api_client_auth: APIClient, catalog_factory):
     assert_cart(response, 201, [(p, 1)])
 
 @pytest.mark.django_db
+def test_cart_add__too_many(api_client_auth: APIClient, product_factory):
+    """Test adding products to the cart (quantity is too large)."""
+    product = product_factory()
+    quantity = product.quantity
+    url = get_cart_url()
+
+    response = api_client_auth.post(url, {
+        'product_id': product.pk,
+        'quantity': quantity + 1
+    })
+    assert_response(response, 400, {
+        'quantity': ["Quantity exceeds the stock."]
+    })
+
+@pytest.mark.django_db
 def test_cart_add__multiple(api_client_auth: APIClient, catalog_factory):
     """Test adding products to the cart (multiple products)."""
     catalog_factory(2, 2)
@@ -117,7 +132,8 @@ def test_cart_add__repeat(api_client_auth: APIClient, catalog_factory):
     })
 
 @pytest.mark.django_db
-def test_cart_add__several_users(api_client_auth: APIClient, catalog_factory, user_factory):
+def test_cart_add__several_users(api_client_auth: APIClient, catalog_factory,
+        user_factory):
     """Test adding products to the cart (several users)."""
     catalog_factory(2, 4)
     url = get_cart_url()
@@ -149,7 +165,7 @@ def _prepare_cart_for_edit(api_client_auth: APIClient, catalog_factory):
 
     # Add all products to the cart one by one.
     for p in Product.objects.all():
-        q = random.randint(1, 10)
+        q = random.randint(1, p.quantity)
         response = api_client_auth.post(create_url, {
             'product_id': p.pk,
             'quantity': q
@@ -158,6 +174,20 @@ def _prepare_cart_for_edit(api_client_auth: APIClient, catalog_factory):
         assert_cart(response, 201, list(cart.values()))
 
     return cart
+
+@pytest.mark.django_db
+def test_cart_update__too_many(api_client_auth: APIClient,
+        cart_line_item_factory):
+    """Test updating products to the cart (quantity is too large)."""
+    # noinspection PyUnresolvedReferences
+    item = cart_line_item_factory(user=api_client_auth._user)
+
+    response = api_client_auth.patch(get_cart_url(item.pk), {
+        'quantity': item.product.quantity + 1
+    })
+    assert_response(response, 400, {
+        'quantity': ["Quantity exceeds the stock."]
+    })
 
 @pytest.mark.django_db
 def test_cart_update(api_client_auth: APIClient, catalog_factory):

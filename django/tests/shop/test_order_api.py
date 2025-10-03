@@ -8,7 +8,7 @@ from apps.shop.serializers import (
     SellerSerializer,
     ShippingAddressSerializer,
     LineItemSerializer,
-    OrderSerializer
+    OrderSerializer, ProductSerializer
 )
 from tests.utils import get_order_url, assert_response
 
@@ -51,6 +51,31 @@ def test_order_create__empty_cart(api_client_auth, shipping_address_factory):
     })
     assert_response(response, 400, {
         'detail': "The cart is empty.",
+    })
+
+@pytest.mark.django_db
+def test_order_create__too_many(api_client_auth, product_factory,
+        cart_line_item_factory, shipping_address_factory):
+    """Test creating an order (product quantity is too large)."""
+    product = product_factory()
+    # noinspection PyUnresolvedReferences
+    cart_line_item_factory(
+        user=api_client_auth._user,
+        product=product,
+        quantity=product.quantity
+    )
+
+    product.quantity -= 1
+    product.save()
+
+    # noinspection PyUnresolvedReferences
+    sa = shipping_address_factory(user=api_client_auth._user)
+    response = api_client_auth.post(get_order_url(), {
+        'shipping_address_id': sa.id,
+    })
+    assert_response(response, 400, {
+        'detail': "Quantity exceeds the stock.",
+        'products': ProductSerializer([product], many=True).data,
     })
 
 @pytest.mark.django_db

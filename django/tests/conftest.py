@@ -72,19 +72,24 @@ def category_factory():
 @pytest.fixture(scope='session')
 def product_factory():
     """Returns a factory to make product instances."""
-    return model_factory(Product)
+    f = model_factory(Product)
+    def factory(*args, **kwargs):
+        # Default product quantity is zero, so ensure we have something
+        # in the stock.
+        return f(*args, **{
+            'quantity': random.randint(100, 500),
+            **kwargs
+        })
+    return factory
 
 @pytest.fixture(scope='session')
-def catalog_factory(user_factory):
+def catalog_factory(user_factory, seller_factory, category_factory, product_factory):
     """Returns a factory for catalog (categories with products).
 
     The factory being returned creates 5-10 sellers, 5-10 catalog
     categories and 5-10 products in every category associated with
     a random seller.
     """
-    seller_factory = model_factory(Seller)
-    category_factory = model_factory(Category)
-    product_factory = model_factory(Product)
     def factory(min_objects: int = 5, max_objects: int = 10):
         def add_products(category: Category):
             products = product_factory(
@@ -132,9 +137,11 @@ def order_factory(cart_line_item_factory):
     def factory(*args, _save=True, **kwargs):
         return f(
             *args,
-            line_items=line_item_factory(_quantity=3),
-            _save=_save,
-            **kwargs
+            **{
+                'line_items': line_item_factory(_quantity=3),
+                '_save': _save,
+                **kwargs
+            }
         )
     return factory
 
@@ -155,14 +162,18 @@ def model_factory(model):
             return baker.make(
                 model,
                 *args,
-                _fill_optional=True,
-                **kwargs
+                **{
+                    '_fill_optional': True,
+                    **kwargs
+                }
             )
         else:
             return baker.prepare(
                 model,
                 *args,
-                _fill_optional=True,
-                **kwargs
+                **{
+                    '_fill_optional': True,
+                    **kwargs
+                }
             )
     return factory

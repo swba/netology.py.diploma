@@ -238,10 +238,25 @@ class OrderViewSet(mixins.ListModelMixin,
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Group all cart line items into orders by seller.
-        orders = {}
         cart = (CartLineItem.objects.filter(user=self.request.user)
                 .select_related('product'))
+
+        # Check if product quantities are still valid.
+        exceedances = []
+        for cart_line_item in cart: # type: CartLineItem
+            if cart_line_item.quantity > cart_line_item.product.quantity:
+                exceedances.append(cart_line_item.product)
+        if exceedances:
+            return Response(
+                {
+                    'detail': "Quantity exceeds the stock.",
+                    'products': ProductSerializer(exceedances, many=True).data,
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Group all cart line items into orders by seller.
+        orders = {}
         for cart_line_item in cart: # type: CartLineItem
             seller_id = cart_line_item.product.seller_id
             # Create a new order for the current seller, if needed.

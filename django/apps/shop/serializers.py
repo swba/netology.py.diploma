@@ -60,6 +60,21 @@ class LineItemSerializer(serializers.ModelSerializer):
         fields = ('id', 'product', 'quantity')
         read_only_fields = ('id',)
 
+    def validate(self, attrs):
+        # Validate quantity (cannot be greater than product stock).
+        if quantity := attrs.get('quantity'):
+            product = None
+            if self.instance:
+                product = self.instance.product
+            elif product_id := attrs.get('product_id'):
+                product = Product.objects.get(id=product_id)
+            if product:
+                if quantity > product.quantity:
+                    raise serializers.ValidationError({
+                        'quantity': "Quantity exceeds the stock."
+                    })
+        return super().validate(attrs)
+
 
 class CartLineItemCreateSerializer(LineItemSerializer):
     """Cart item serializer for create action."""
