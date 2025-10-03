@@ -8,9 +8,13 @@ from .views_api import (
     CartLineItemViewSet,
     ShippingAddressViewSet,
     OrderViewSet,
+    SellerViewSet,
 )
 
 app_name = 'api.shop'
+
+seller_router = DefaultRouter()
+seller_router.register('', SellerViewSet)
 
 category_router = DefaultRouter()
 category_router.register('', CategoryViewSet)
@@ -28,6 +32,7 @@ order_router = DefaultRouter()
 order_router.register('', OrderViewSet)
 
 urlpatterns = [
+    path('sellers/', include(seller_router.urls)),
     path('categories/', include(category_router.urls)),
     path('products/', include(product_router.urls)),
     path('cart/', include(cart_router.urls)),

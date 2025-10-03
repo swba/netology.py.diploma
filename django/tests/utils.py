@@ -39,6 +39,19 @@ def get_token_url(action: Literal['refresh', 'verify'] | None = None) -> str:
         action = 'obtain_pair'
     return reverse(f'api.accounts:token_{action}')
 
+def get_seller_url(pk=None):
+    """Returns seller endpoint URL.
+
+    Args:
+        pk: (optional) Seller ID.
+
+    Returns:
+        Endpoint URL.
+    """
+    if pk:
+        return reverse('api.shop:seller-detail', kwargs={'pk': pk})
+    return reverse('api.shop:seller-list')
+
 def get_category_url(pk=None):
     """Returns category endpoint URL.
 

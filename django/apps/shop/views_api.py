@@ -11,8 +11,12 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
 from .filters import ProductFilter
-from .models import Product, CartLineItem, ShippingAddress, Order, Category
-from .permissions import ShippingAddressPermission, OrderPermission
+from .models import Product, CartLineItem, ShippingAddress, Order, Category, Seller
+from .permissions import (
+    ShippingAddressPermission,
+    OrderPermission,
+    SellerPermission
+)
 from .serializers import (
     CategorySerializer,
     ProductSerializer,
@@ -21,7 +25,22 @@ from .serializers import (
     ShippingAddressSerializer,
     OrderSerializer,
     OrderCreateSerializer,
+    SellerSerializer,
 )
+
+
+class SellerViewSet(ModelViewSet):
+    """View set for Seller model."""
+
+    http_method_names = ['get', 'post', 'patch', 'delete']
+
+    serializer_class = SellerSerializer
+    queryset = Seller.objects.all()
+    permission_classes = (SellerPermission,)
+
+    def perform_create(self, serializer):
+        # Always create sellers for the current user.
+        serializer.save(user=self.request.user)
 
 
 @extend_schema_view(

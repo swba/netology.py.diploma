@@ -80,7 +80,6 @@ class Seller(BaseShopModel):
     business_info = models.TextField(
         verbose_name=_("Business Information"))
     is_active = models.BooleanField(
-        default=True,
         verbose_name=_("Activity Status"),
         help_text=_("Whether the seller is active and accepts orders."))
 
@@ -223,7 +222,7 @@ class Order(BaseShopModel):
 
     seller = models.ForeignKey(
         Seller,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         related_name='orders',
         verbose_name=_("Seller"))
     shipping_address = models.ForeignKey(

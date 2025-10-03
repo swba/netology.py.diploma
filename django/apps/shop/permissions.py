@@ -1,6 +1,25 @@
-from rest_framework.permissions import IsAuthenticated, SAFE_METHODS
+from rest_framework.permissions import (
+    IsAuthenticated,
+    SAFE_METHODS,
+    DjangoModelPermissionsOrAnonReadOnly
+)
 
-from .models import ShippingAddress, Order
+from .models import ShippingAddress, Order, Seller
+
+
+class SellerPermission(DjangoModelPermissionsOrAnonReadOnly):
+    """Provides permission for Seller model.
+
+    Users must have Django's "Can add Seller Profile", "Can change
+    Seller Profile" and "Can delete Seller Profile" permissions. This
+    permission class ensures that users can only edit and delete their
+    own seller profiles.
+    """
+
+    def has_object_permission(self, request, view, obj: Seller):
+        if request.method not in SAFE_METHODS:
+            return request.user and request.user.pk == obj.user.pk
+        return super().has_object_permission(request, view, obj)
 
 
 class ShippingAddressPermission(IsAuthenticated):
