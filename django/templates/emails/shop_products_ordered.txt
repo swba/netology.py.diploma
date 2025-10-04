@@ -1,0 +1,15 @@
+{% load i18n %}
+{% translate "Hello there!" %}
+
+{% translate "You successfully ordered the following products" %}:
+{% for order in orders %}
+{% translate "Seller" %}: {{ order.seller.title }}
+{% for line_item in order.line_items %}
+{% translate "Product" %}: {{ line_item.product.title }}
+{% translate "Price" %}: {{ line_item.product.list_price }}
+{% translate "Quantity" %}: {{ line_item.quantity }}
+{% translate "Total" %}: {{ line_item.total }}
+{% if not forloop.last %}----------{% endif %}
+{% endfor %}
+{% if not forloop.last %}=========={% endif %}
+{% endfor %}

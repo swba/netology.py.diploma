@@ -1,5 +1,6 @@
 from django.db import IntegrityError
 from django.db.models import Q
+from django.utils.translation import gettext_lazy as _
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter
 from rest_framework import mixins, status
@@ -27,6 +28,7 @@ from .serializers import (
     OrderCreateSerializer,
     SellerSerializer,
 )
+from ..base.email import send_email, EmailParams
 
 
 class SellerViewSet(ModelViewSet):
@@ -243,7 +245,7 @@ class OrderViewSet(mixins.ListModelMixin,
         # Check if the shipping address belongs to the current user.
         shipping_address_is_valid = ShippingAddress.objects.filter(
             pk=shipping_address_id,
-            user=self.request.user
+            user=request.user
         ).exists()
         if not shipping_address_is_valid:
             raise ValidationError({
@@ -251,13 +253,13 @@ class OrderViewSet(mixins.ListModelMixin,
             })
 
         # Check if the cart is not empty.
-        if not CartLineItem.objects.filter(user=self.request.user).exists():
+        if not CartLineItem.objects.filter(user=request.user).exists():
             return Response(
                 {'detail': "The cart is empty."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        cart = (CartLineItem.objects.filter(user=self.request.user)
+        cart = (CartLineItem.objects.filter(user=request.user)
                 .select_related('product'))
 
         # Check if product sellers are still active and  quantities are
@@ -304,4 +306,13 @@ class OrderViewSet(mixins.ListModelMixin,
         cart.delete()
 
         serializer = OrderSerializer(orders.values(), many=True)
+
+        send_email(
+            'shop_products_ordered',
+            request.user,
+            params=EmailParams(subject=_("The products have been ordered")),
+            context={
+                'orders': serializer.data,
+            })
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)

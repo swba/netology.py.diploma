@@ -1,0 +1,28 @@
+{% load i18n %}
+<p>{% translate "Hello there!" %}</p>
+<p>{% translate "You successfully ordered the following products" %}:</p>
+{% for order in orders %}
+    <table>
+        <caption>
+            {% translate "Seller" %}: {{ order.seller.title }}
+        </caption>
+        <thead>
+            <tr>
+                <th>{% translate "Product" %}</th>
+                <th>{% translate "Price" %}</th>
+                <th>{% translate "Quantity" %}</th>
+                <th>{% translate "Total" %}</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for line_item in order.line_items %}
+            <tr>
+                <td>{{ line_item.product.title }}</td>
+                <td>{{ line_item.product.list_price }}</td>
+                <td>{{ line_item.quantity }}</td>
+                <td>{{ line_item.total }}</td>
+            </tr>
+        </tbody>
+        {% endfor %}
+    </table>
+{% endfor %}

@@ -70,7 +70,7 @@ def category_factory():
     return model_factory(Category)
 
 @pytest.fixture(scope='session')
-def product_factory():
+def product_factory(seller_factory):
     """Returns a factory to make product instances."""
     f = model_factory(Product)
     def factory(*args, **kwargs):
@@ -78,6 +78,8 @@ def product_factory():
         # in the stock.
         if 'quantity' not in kwargs:
             kwargs['quantity'] = random.randint(100, 500)
+        if 'seller' not in kwargs:
+            kwargs['seller'] = seller_factory(is_active=True)
         return f(*args, **kwargs)
     return factory
 

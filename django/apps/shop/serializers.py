@@ -57,7 +57,7 @@ class LineItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CartLineItem
-        fields = ('id', 'product', 'quantity')
+        fields = ('id', 'product', 'quantity', 'total')
         read_only_fields = ('id',)
 
     def validate(self, attrs):

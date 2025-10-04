@@ -1,9 +1,10 @@
+import random
 from collections import defaultdict
 
 # noinspection PyPackageRequirements
 import pytest
 
-from apps.shop.models import Product, Order
+from apps.shop.models import Product, Order, CartLineItem
 from apps.shop.serializers import (
     SellerSerializer,
     ShippingAddressSerializer,
@@ -106,23 +107,38 @@ def test_order_create__seller_inactive(api_client_auth, seller_factory,
 
 @pytest.mark.django_db
 def test_order_create(api_client_auth, user_factory, catalog_factory,
-        shipping_address_factory, cart_line_item_factory):
+        shipping_address_factory, cart_line_item_factory, settings, mailoutbox):
     """Test creating an order."""
+    settings.EMAIL_ASYNC = False # Do not use Celery for testing.
+
     catalog_factory()
     products = Product.objects.all()[:8]
+
+    # Prepare several carts.
     # noinspection PyUnresolvedReferences
-    users = [api_client_auth._user, user_factory()]
+    cur_user = api_client_auth._user
+    users = [cur_user, user_factory()]
     carts = defaultdict(list)
     for i, user in enumerate(users):
         for k in range(4):
             carts[i].append(cart_line_item_factory(
                 user=user,
                 product=products[i * 2 + k],
+                quantity=random.randint(1, 10),
             ))
+
+    # Order cart items for the current user.
     sa = shipping_address_factory(user=users[0])
     response = api_client_auth.post(get_order_url(), {
         'shipping_address_id': sa.id,
     })
+
+    # Check email sent to the user.
+    assert len(mailoutbox) > 0
+    assert mailoutbox[0].subject == "The products have been ordered"
+    print(mailoutbox[0].body)
+
+    # Check that the cart was converted into a correct list of orders.
     expected = {}
     for line_item in carts[0]:
         seller = line_item.product.seller
@@ -138,6 +154,9 @@ def test_order_create(api_client_auth, user_factory, catalog_factory,
             LineItemSerializer(instance=line_item).data
         )
     assert_response(response, 201, list(expected.values()))
+
+    # Check that the cart is now empty.
+    assert CartLineItem.objects.filter(user=cur_user).count() == 0
 
 @pytest.mark.django_db
 def test_order_list__anonymous(api_client):
