@@ -309,10 +309,20 @@ class OrderViewSet(mixins.ListModelMixin,
 
         send_email(
             'shop_products_ordered',
-            request.user,
+            request.user.email,
             params=EmailParams(subject=_("The products have been ordered")),
             context={
                 'orders': serializer.data,
             })
+
+        for order in orders.values(): # type: Order
+            send_email(
+                'shop_order_created',
+                order.seller.user.email,
+                params=EmailParams(subject=_("New order created")),
+                context={
+                    'order': OrderSerializer(order).data,
+                }
+            )
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)

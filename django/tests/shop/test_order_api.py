@@ -133,11 +133,6 @@ def test_order_create(api_client_auth, user_factory, catalog_factory,
         'shipping_address_id': sa.id,
     })
 
-    # Check email sent to the user.
-    assert len(mailoutbox) > 0
-    assert mailoutbox[0].subject == "The products have been ordered"
-    print(mailoutbox[0].body)
-
     # Check that the cart was converted into a correct list of orders.
     expected = {}
     for line_item in carts[0]:
@@ -154,6 +149,14 @@ def test_order_create(api_client_auth, user_factory, catalog_factory,
             LineItemSerializer(instance=line_item).data
         )
     assert_response(response, 201, list(expected.values()))
+
+    # Check email sent to the user.
+    assert len(mailoutbox) == len(expected) + 1
+    assert mailoutbox[0].subject == "The products have been ordered"
+    for email in mailoutbox[1:]:
+        assert email.subject == "New order created"
+    for email in mailoutbox:
+        print(email.body)
 
     # Check that the cart is now empty.
     assert CartLineItem.objects.filter(user=cur_user).count() == 0

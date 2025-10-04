@@ -1,9 +1,12 @@
+import logging
 from typing import TypedDict
 
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.template import TemplateDoesNotExist, TemplateSyntaxError
 from django.template.loader import render_to_string
+
+logger = logging.getLogger(__name__)
 
 
 class EmailParams(TypedDict, total=False):
@@ -46,11 +49,11 @@ def send_email(key: str, to: str|list[str], *, params: EmailParams|None = None,
     try:
         text_message = render_to_string(f'emails/{key}.txt', context)
     except (TemplateDoesNotExist, TemplateSyntaxError) as e:
-        pass
+        logger.error(e.message)
     try:
         html_message = render_to_string(f'emails/{key}.html', context)
-    except (TemplateDoesNotExist, TemplateSyntaxError):
-        pass
+    except (TemplateDoesNotExist, TemplateSyntaxError) as e:
+        logger.error(e.message)
 
     message = EmailMultiAlternatives(
         subject=subject,

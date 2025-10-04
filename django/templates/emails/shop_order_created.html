@@ -1,0 +1,60 @@
+{% load i18n %}
+<p>
+    {% translate "Hello there!" %}
+</p>
+<p>
+    {% blocktranslate with order_id=order.id %}
+        New order #{{ order_id }} was created:
+    {% endblocktranslate %}
+</p>
+<table>
+    <caption>{% translate "Shipping address" %}</caption>
+    <tbody>
+        <tr>
+            <td>{% translate "Full name" %}</td>
+            <td>{{ order.shipping_address.full_name }}</td>
+        </tr>
+        <tr>
+            <td>{% translate "Phone Number" %}</td>
+            <td>{{ order.shipping_address.phone_number }}</td>
+        </tr>
+        <tr>
+            <td>{% translate "Street Address" %}</td>
+            <td>{{ order.shipping_address.street_address }}</td>
+        </tr>
+        <tr>
+            <td>{% translate "Locality" %}</td>
+            <td>{{ order.shipping_address.locality }}</td>
+        </tr>
+        <tr>
+            <td>{% translate "Administrative Area" %}</td>
+            <td>{{ order.shipping_address.administrative_area }}</td>
+        </tr>
+        <tr>
+            <td>{% translate "Postal Code" %}</td>
+            <td>{{ order.shipping_address.postal_code }}</td>
+        </tr>
+        <tr>
+            <td>{% translate "Country" %}</td>
+            <td>{{ order.shipping_address.country }}</td>
+        </tr>
+    </tbody>
+</table>
+
+<table>
+    <caption>{% translate "Products" %}</caption>
+    <thead>
+        <tr>
+            <th>{% translate "Product" %}</th>
+            <th>{% translate "Quantity" %}</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for line_item in order.line_items %}
+        <tr>
+            <td>{{ line_item.product.title }}</td>
+            <td>{{ line_item.quantity }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>

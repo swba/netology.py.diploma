@@ -1,7 +1,7 @@
 {% load i18n %}
 {% translate "Hello there!" %}
 
-{% translate "You successfully ordered the following products" %}:
+{% translate "You successfully ordered the following products:" %}
 {% for order in orders %}
 {% translate "Seller" %}: {{ order.seller.title }}
 {% for line_item in order.line_items %}

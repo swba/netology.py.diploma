@@ -1,0 +1,22 @@
+{% load i18n %}
+{% translate "Hello there!" %}
+{% blocktranslate with order_id=order.id %}
+New order #{{ order_id }} was created:
+{% endblocktranslate %}
+{% translate "Shipping address" %}:
+==========
+{% translate "Full name" %}: {{ order.shipping_address.full_name }}
+{% translate "Phone Number" %}: {{ order.shipping_address.phone_number }}
+{% translate "Street Address" %}: {{ order.shipping_address.street_address }}
+{% translate "Locality" %}: {{ order.shipping_address.locality }}
+{% translate "Administrative Area" %}: {{ order.shipping_address.administrative_area }}
+{% translate "Postal Code" %}: {{ order.shipping_address.postal_code }}
+{% translate "Country" %}: {{ order.shipping_address.country }}
+
+{% translate "Products" %}:
+==========
+{% for line_item in order.line_items %}
+{% translate "Product" %}: {{ line_item.product.title }}
+{% translate "Quantity" %}: {{ line_item.quantity }}
+{% if not forloop.last %}----------{% endif %}
+{% endfor %}
