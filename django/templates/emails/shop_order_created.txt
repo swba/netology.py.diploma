@@ -1,4 +1,6 @@
+{% extends 'emails/email_base.txt' %}
 {% load i18n %}
+{% block content %}
 {% translate "Hello there!" %}
 {% blocktranslate with order_id=order.id %}
 New order #{{ order_id }} was created:
@@ -19,4 +21,4 @@ New order #{{ order_id }} was created:
 {% translate "Product" %}: {{ line_item.product.title }}
 {% translate "Quantity" %}: {{ line_item.quantity }}
 {% if not forloop.last %}----------{% endif %}
-{% endfor %}
+{% endfor %}{% endblock %}

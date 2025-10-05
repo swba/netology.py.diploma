@@ -1,5 +1,4 @@
-{% load i18n %}
-{% translate "Hello there!" %}
+{% extends 'emails/email_base.txt' %}{% load i18n %}{% block content %}{% translate "Hello there!" %}
 
 {% translate "You successfully ordered the following products:" %}
 {% for order in orders %}
@@ -10,6 +9,4 @@
 {% translate "Quantity" %}: {{ line_item.quantity }}
 {% translate "Total" %}: {{ line_item.total }}
 {% if not forloop.last %}----------{% endif %}
-{% endfor %}
-{% if not forloop.last %}=========={% endif %}
-{% endfor %}
+{% endfor %}{% if not forloop.last %}=========={% endif %}{% endfor %}{% endblock %}

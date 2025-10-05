@@ -25,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-u8sado^_ahuadg+pu)898s#@l669tfr=+@a=!^daj9$9fg9-w3'
+SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool('DEBUG', False)
@@ -85,6 +85,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'apps.base.context_processors.django_settings',
             ],
         },
     },
@@ -180,24 +181,31 @@ SIMPLE_JWT = {
 }
 
 
+# Email settings.
+# https://docs.djangoproject.com/en/5.2/topics/email/
+
+EMAIL_BACKEND = env('EMAIL_BACKEND')
+EMAIL_HOST = env('EMAIL_HOST')
+EMAIL_HOST_USER = env('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
+EMAIL_PORT = env.int('EMAIL_PORT')
+EMAIL_USE_SSL = env.bool('EMAIL_USE_SSL')
+DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
+EMAIL_ASYNC = env.bool('EMAIL_ASYNC', False) # Whether to use Celery to send emails.
+
+
+# Settings specific to the current project.
+
+SITE_NAME = "Netology: Shop API"
+USER_TOKEN_LIFETIME = timedelta(hours=6),
+
+
 # Spectacular configuration.
 # https://drf-spectacular.readthedocs.io/en/latest/settings.html
 
 SPECTACULAR_SETTINGS = {
-    'TITLE': "Netology: Shop API",
+    'TITLE': SITE_NAME,
     'VERSION': '0.0.1',
     'SERVE_INCLUDE_SCHEMA': False,
     'SCHEMA_PATH_PREFIX': r'/api/v[0-9]/',
 }
-
-# Email settings.
-# https://docs.djangoproject.com/en/5.2/topics/email/
-
-EMAIL_BACKEND=env('EMAIL_BACKEND')
-EMAIL_HOST=env('EMAIL_HOST')
-EMAIL_HOST_USER=env('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD=env('EMAIL_HOST_PASSWORD')
-EMAIL_PORT=env.int('EMAIL_PORT')
-EMAIL_USE_SSL=env.bool('EMAIL_USE_SSL')
-DEFAULT_FROM_EMAIL=env('DEFAULT_FROM_EMAIL')
-EMAIL_ASYNC=env.bool('EMAIL_ASYNC', False) # Whether to use Celery to send emails.

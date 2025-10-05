@@ -6,6 +6,8 @@ from django.core.mail import EmailMultiAlternatives
 from django.template import TemplateDoesNotExist, TemplateSyntaxError
 from django.template.loader import render_to_string
 
+from apps.base.context_processors import django_settings
+
 logger = logging.getLogger(__name__)
 
 
@@ -46,14 +48,17 @@ def send_email(key: str, to: str|list[str], *, params: EmailParams|None = None,
     attachments = params.get('attachments')
 
     text_message = html_message = ''
+    # Context processors are not being called when rendering templates
+    # without a request instance, so add required data directly.
+    context = {**context, **django_settings()}
     try:
         text_message = render_to_string(f'emails/{key}.txt', context)
     except (TemplateDoesNotExist, TemplateSyntaxError) as e:
-        logger.error(e.message)
+        logger.error(e)
     try:
         html_message = render_to_string(f'emails/{key}.html', context)
     except (TemplateDoesNotExist, TemplateSyntaxError) as e:
-        logger.error(e.message)
+        logger.error(e)
 
     message = EmailMultiAlternatives(
         subject=subject,

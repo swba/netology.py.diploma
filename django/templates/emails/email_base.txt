@@ -1,0 +1,3 @@
+{% load i18n %}{% block content %}{% endblock %}
+{% block signature %}=========={% blocktranslate %}
+Sincerely, {{ SITE_NAME }}'s team.{% endblocktranslate %}{% endblock %}
