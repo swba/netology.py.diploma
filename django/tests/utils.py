@@ -9,20 +9,23 @@ from django.urls import reverse
 from rest_framework.response import Response
 from rest_framework.test import APIClient
 
+from apps.accounts.views_api import ProtectedActions
 from apps.shop.models import Product
 
 
-def get_user_url(pk: int = None) -> str:
+def get_user_url(pk: int = None, action: ProtectedActions = None) -> str:
     """Returns user endpoint URL.
 
     Args:
         pk: (optional) User ID.
+        action: (optional) User action type.
 
     Returns:
         Endpoint URL.
     """
     if pk:
-        return reverse('api.accounts:user-detail', kwargs={'pk': pk})
+        action = action or 'detail'
+        return reverse(f'api.accounts:user-{action}', kwargs={'pk': pk})
     return reverse('api.accounts:user-list')
 
 def get_token_url(action: Literal['refresh', 'verify'] | None = None) -> str:
@@ -138,7 +141,7 @@ def generate_password() -> str:
 
 def user_make_and_login(api_client: APIClient, user_make_factory) -> Response:
     """Makes and logs in a user."""
-    user = user_make_factory()
+    user = user_make_factory(is_active=True, is_verified=True)
     # noinspection PyProtectedMember
     response = api_client.post(get_token_url(), {
         'email': user.email,

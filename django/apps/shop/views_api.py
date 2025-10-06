@@ -1,6 +1,7 @@
 from django.db import IntegrityError
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
+
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter
 from rest_framework import mixins, status
@@ -242,6 +243,13 @@ class OrderViewSet(mixins.ListModelMixin,
         serializer.is_valid(raise_exception=True)
         shipping_address_id = serializer.validated_data['shipping_address_id']
 
+        # Check if the current user's email is verified.
+        if not request.user.is_verified:
+            return Response(
+                {'detail': "User's email address is not verified."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         # Check if the shipping address belongs to the current user.
         shipping_address_is_valid = ShippingAddress.objects.filter(
             pk=shipping_address_id,
@@ -262,7 +270,7 @@ class OrderViewSet(mixins.ListModelMixin,
         cart = (CartLineItem.objects.filter(user=request.user)
                 .select_related('product'))
 
-        # Check if product sellers are still active and  quantities are
+        # Check if product sellers are still active and quantities are
         # still valid.
         exceedances, inactives = [], []
         for cart_line_item in cart: # type: CartLineItem

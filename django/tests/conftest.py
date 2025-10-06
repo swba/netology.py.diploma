@@ -142,9 +142,14 @@ def order_factory(cart_line_item_factory):
     return factory
 
 @pytest.fixture(scope='session')
-def cart_line_item_factory():
+def cart_line_item_factory(product_factory):
     """Returns a factory to make cart line items."""
-    return model_factory(CartLineItem)
+    f = model_factory(CartLineItem)
+    def factory(*args, **kwargs):
+        if 'product' not in kwargs:
+            kwargs['product'] = product_factory()
+        return f(*args, **kwargs)
+    return factory
 
 @pytest.fixture(scope='session')
 def seller_factory():

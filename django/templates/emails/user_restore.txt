@@ -1,0 +1,6 @@
+{% extends 'emails/email_base.txt' %}
+{% load i18n %}
+{% block content %}
+{% translate "Hello there!" %}
+{% blocktranslate %}Please reset your password using the following token: {{ token }}.{% endblocktranslate %}
+{% endblock %}

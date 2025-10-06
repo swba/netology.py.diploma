@@ -197,7 +197,7 @@ EMAIL_ASYNC = env.bool('EMAIL_ASYNC', False) # Whether to use Celery to send ema
 # Settings specific to the current project.
 
 SITE_NAME = "Netology: Shop API"
-USER_TOKEN_LIFETIME = timedelta(hours=6),
+USER_TOKEN_LIFETIME = timedelta(hours=24)
 
 
 # Spectacular configuration.

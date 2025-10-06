@@ -19,7 +19,7 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ('id',)
 
     def validate(self, attrs):
-        # Validate user password using builtin Django validators.
+        """Validates user password using builtin Django validators."""
         if password := attrs.get('password'):
             try:
                 validate_password(password, User(**attrs))
@@ -28,3 +28,23 @@ class UserSerializer(serializers.ModelSerializer):
             # If password is OK, hash it.
             attrs['password'] = make_password(password)
         return attrs
+
+
+class UserPasswordSerializer(serializers.Serializer):
+    """User password serializer."""
+
+    password = serializers.CharField(
+        max_length=128,
+        write_only=True)
+
+    class Meta:
+        model = User
+        fields = ('password',)
+
+    def validate_password(self, value):
+        """Validates user password using builtin Django validators."""
+        try:
+            validate_password(value, self.instance)
+        except ValidationError as e:
+            raise serializers.ValidationError(e.messages)
+        return value

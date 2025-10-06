@@ -30,6 +30,18 @@ def test_tokens_get__wrong_password(api_client: APIClient, user_factory):
     })
 
 @pytest.mark.django_db
+def test_tokens_get__inactive(api_client: APIClient, user_factory):
+    """Test user login (inactive user)."""
+    user = user_factory(is_active=False)
+    response = api_client.post(get_token_url(), {
+        'email': user.email,
+        'password': 'OopsIdidItAgain',
+    })
+    assert_response(response, 401, {
+        'detail': "No active account found with the given credentials"
+    })
+
+@pytest.mark.django_db
 def test_tokens_get(api_client: APIClient, user_factory):
     """Test user login (obtain a pair of tokens)."""
     response = user_make_and_login(api_client, user_factory)

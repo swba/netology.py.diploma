@@ -22,6 +22,22 @@ def test_order_create__anonymous(api_client):
     })
 
 @pytest.mark.django_db
+def test_order_create__user_unverified(api_client_auth,
+        shipping_address_factory):
+    """Test creating an order (user's email is not verified)."""
+    # noinspection PyUnresolvedReferences
+    user = api_client_auth._user
+    user.is_verified = False
+    user.save()
+    sa = shipping_address_factory(user=user)
+    response = api_client_auth.post(get_order_url(), {
+        'shipping_address_id': sa.id,
+    })
+    assert_response(response, 400, {
+        'detail': "User's email address is not verified.",
+    })
+
+@pytest.mark.django_db
 def test_order_create__no_shipping_address(api_client_auth):
     """Test creating an order (no shipping address provided)."""
     response = api_client_auth.post(get_order_url(), {})
