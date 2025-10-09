@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from apps.base.email import send_email, EmailParams
+from apps.base.serializers import BaseResponseSerializer
 
 from .models import UserToken, User
 from .permissions import AccountPermission
@@ -21,7 +22,6 @@ from .serializers import (
     AccountEmailVerifySerializer,
     AccountPasswordRestoreSerializer
 )
-from ..base.serializers import BaseResponseSerializer
 
 # Types of actions that require a valid token for verification.
 ProtectedActions = Literal['verify', 'restore']
@@ -30,7 +30,7 @@ ProtectedActions = Literal['verify', 'restore']
 @extend_schema_view(
     create=extend_schema(description="Register a new account."),
     retrieve=extend_schema(description="Retrieve account details."),
-    patch=extend_schema(description="Update account details."),
+    partial_update=extend_schema(description="Update account details."),
     verify=extend_schema(
         request=AccountEmailVerifySerializer,
         responses={

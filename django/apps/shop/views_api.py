@@ -24,6 +24,7 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
 from apps.base.email import send_email, EmailParams
+from apps.base.serializers import BaseResponseSerializer
 
 from .filters import ProductFilter
 from .models import (
@@ -54,6 +55,13 @@ from .serializers import (
 from .tasks import catalog_import_task
 
 
+@extend_schema_view(
+    list=extend_schema(description="Get a list of sellers."),
+    retrieve=extend_schema(description="Get seller details."),
+    create=extend_schema(description="Add a new seller."),
+    partial_update=extend_schema(description="Update a seller."),
+    destroy=extend_schema(description="Delete a seller.")
+)
 class SellerViewSet(ModelViewSet):
     """View set for Seller model."""
 
@@ -81,6 +89,10 @@ class CategoryViewSet(mixins.ListModelMixin,
     queryset = Category.objects.all()
 
 
+@extend_schema_view(
+    list=extend_schema(description="Search across all products."),
+    retrieve=extend_schema(description="Get product details."),
+)
 class ProductViewSet(mixins.ListModelMixin,
                      mixins.RetrieveModelMixin,
                      GenericViewSet):
@@ -98,6 +110,7 @@ class ProductViewSet(mixins.ListModelMixin,
         description="Add a new line item to the current user's cart.",
         responses={
             status.HTTP_201_CREATED: LineItemSerializer(many=True),
+            status.HTTP_400_BAD_REQUEST: BaseResponseSerializer,
         }
     ),
     partial_update=extend_schema(
@@ -125,8 +138,7 @@ class CartLineItemViewSet(mixins.CreateModelMixin,
                           mixins.UpdateModelMixin,
                           mixins.DestroyModelMixin,
                           GenericViewSet):
-    """View set to create, list, update and delete cart line items.
-    """
+    """View set to create, list, update and delete cart line items."""
     http_method_names = ['get', 'post', 'patch', 'delete']
 
     serializer_class = LineItemSerializer
@@ -215,17 +227,20 @@ class ShippingAddressViewSet(ModelViewSet):
     create=extend_schema(
         description="Create new orders from the cart contents.",
         request=OrderCreateSerializer,
+        responses=OrderSerializer(many=True),
+    ),
+    list=extend_schema(
         parameters=[
             OpenApiParameter(
                 name='as_seller',
-                description="Show orders assigned to the current user as a seller",
+                description="Show orders assigned to the current user as a "
+                            "seller.",
                 required=False,
                 type=OpenApiTypes.BOOL,
             ),
         ],
-        responses=OrderSerializer(many=True),
+        description="Get a list of orders.",
     ),
-    list=extend_schema(description="Get a list of orders."),
     retrieve=extend_schema(description="Get order details."),
     partial_update=extend_schema(description="Update order status."),
 )
@@ -358,6 +373,15 @@ class OrderViewSet(mixins.ListModelMixin,
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
+@extend_schema_view(
+    post=extend_schema(
+        request=CatalogImportSerializer,
+        responses={
+            status.HTTP_200_OK: BaseResponseSerializer,
+            status.HTTP_400_BAD_REQUEST: BaseResponseSerializer,
+        },
+    )
+)
 class CatalogImportView(APIView):
     """View to import seller products."""
 
@@ -368,8 +392,8 @@ class CatalogImportView(APIView):
         """Imports seller products from a YAML or JSON file.
 
         This method allows two ways of providing data to import. If
-        request contains a file, it's used to import. Otherwise, if
-        POSTed data has a 'url' parameter, it's used to upload data
+        request contains a `file`, it's used to import. Otherwise, if
+        POSTed data has a `url` parameter, it's used to upload data
         from the internet.
         """
         serializer = CatalogImportSerializer(data=request.data, context={

@@ -277,6 +277,7 @@ class BaseLineItem(models.Model):
 
     @property
     def total(self):
+        """Line item total."""
         return self.product.list_price * self.quantity
 
 
