@@ -1,0 +1,53 @@
+name: netology-diploma
+
+services:
+
+  postgres:
+    image: postgres:17-alpine
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_NAME}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASS}
+
+  redis:
+    image: redis:8-alpine
+    env_file:
+      - .env
+
+  celery:
+    build:
+      context: .
+      dockerfile: celery.Dockerfile
+    env_file:
+      - .env
+    environment:
+      WAIT_HOSTS: ${POSTGRES_HOST}:${POSTGRES_PORT}, ${REDIS_HOST}:${REDIS_PORT}
+    depends_on:
+      - redis
+      - postgres
+
+  django:
+    build: .
+    env_file:
+      - .env
+    environment:
+      WAIT_HOSTS: ${POSTGRES_HOST}:${POSTGRES_PORT}, ${REDIS_HOST}:${REDIS_PORT}
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      - postgres
+      - redis
+      - celery
+
+  tests:
+    build:
+      context: .
+      dockerfile: tests.Dockerfile
+    env_file:
+      - .env
+    environment:
+      WAIT_HOSTS: django:8000
+    depends_on:
+      - django
