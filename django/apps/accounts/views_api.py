@@ -3,6 +3,7 @@ from typing import Literal
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from drf_spectacular.utils import extend_schema_view, extend_schema
 
 from rest_framework import mixins, status
 from rest_framework.decorators import action
@@ -14,12 +15,43 @@ from apps.base.email import send_email, EmailParams
 
 from .models import UserToken, User
 from .permissions import AccountPermission
-from .serializers import UserSerializer, UserPasswordSerializer
+from .serializers import (
+    UserSerializer,
+    UserPasswordSerializer,
+    AccountEmailVerifySerializer,
+    AccountPasswordRestoreSerializer
+)
+from ..base.serializers import BaseResponseSerializer
 
 # Types of actions that require a valid token for verification.
 ProtectedActions = Literal['verify', 'restore']
 
 
+@extend_schema_view(
+    create=extend_schema(description="Register a new account."),
+    retrieve=extend_schema(description="Retrieve account details."),
+    patch=extend_schema(description="Update account details."),
+    verify=extend_schema(
+        request=AccountEmailVerifySerializer,
+        responses={
+            status.HTTP_200_OK: BaseResponseSerializer,
+            status.HTTP_404_NOT_FOUND: BaseResponseSerializer,
+        },
+        description="If `token` value is not provided, a new verification "
+                    "email is sent to the account's email address, otherwise "
+                    "it's used to verify the address."
+    ),
+    restore=extend_schema(
+        request=AccountPasswordRestoreSerializer,
+        responses={
+            status.HTTP_200_OK: BaseResponseSerializer,
+            status.HTTP_404_NOT_FOUND: BaseResponseSerializer,
+        },
+        description="If `token` value is not provided, a new email with a "
+                    "restoration token is sent to the account's email address, "
+                    "otherwise it's used to reset the account's password."
+    ),
+)
 class AccountViewSet(mixins.CreateModelMixin,
                      mixins.RetrieveModelMixin,
                      mixins.UpdateModelMixin,
@@ -58,7 +90,7 @@ class AccountViewSet(mixins.CreateModelMixin,
                 instance=user
             )
             serializer.is_valid(raise_exception=True)
-            user.set_password(serializer.data.get('password'))
+            user.set_password(serializer.validated_data.get('password'))
             user.save()
             return "Password reset."
         return self.protected_action(request, pk, 'restore', reset_password)

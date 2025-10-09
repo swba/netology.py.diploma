@@ -48,3 +48,26 @@ class UserPasswordSerializer(serializers.Serializer):
         except ValidationError as e:
             raise serializers.ValidationError(e.messages)
         return value
+
+
+class TokenSerializer(serializers.Serializer):
+    """A serializer with a token field."""
+
+    token = serializers.CharField(
+        max_length=64,
+        write_only=True,
+        required=False)
+
+
+class AccountEmailVerifySerializer(TokenSerializer):
+    """Account email verification serializer."""
+    pass
+
+
+class AccountPasswordRestoreSerializer(TokenSerializer):
+    """Account password restore serializer."""
+
+    password = serializers.CharField(
+        max_length=128,
+        write_only=True,
+        required=False)
