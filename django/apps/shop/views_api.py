@@ -382,17 +382,19 @@ class CatalogImportView(APIView):
 
         # There is a data file uploaded.
         if 'file' in serializer.validated_data:
-            stream = serializer.validated_data.get('file')
+            file = serializer.validated_data.get('file')
+            if data_format == 'json':
+                data = json.load(file)
+            else:
+                data = yaml.full_load(file)
         # There is a URL with a file to retrieve.
         else:
             url = serializer.validated_data.get('url')
-            stream = requests.get(url).content
-
-        # Get products to import.
-        if data_format == 'json':
-            data = json.load(stream)
-        else:
-            data = yaml.full_load(stream)
+            response = requests.get(url)
+            if data_format == 'json':
+                data = response.json()
+            else:
+                data = yaml.full_load(response.content)
 
         if data:
             serializer = ProductImportSerializer(data=data, many=True, context={
