@@ -27,6 +27,9 @@ def generate_phone_number() -> str:
     """Generates a random phone number."""
     return rstr.xeger(PhoneField.pattern)
 
+@pytest.fixture(autouse=True)
+def patch_settings(settings):
+    settings.USE_CELERY = False # Do not use Celery for testing.
 
 @pytest.fixture
 def api_client() -> APIClient:

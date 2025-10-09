@@ -2,11 +2,11 @@ import logging
 from typing import TypedDict
 
 from django.conf import settings
-from django.core.mail import EmailMultiAlternatives
 from django.template import TemplateDoesNotExist, TemplateSyntaxError
 from django.template.loader import render_to_string
 
-from apps.base.context_processors import django_settings
+from .context_processors import django_settings
+from .tasks import send_email_task
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ def send_email(key: str, to: str|list[str], *, params: EmailParams|None = None,
 
     Returns:
         Either the result of the immediate email sending or ID of the
-        corresponding Celery task if settings.EMAIL_ASYNC is set to
+        corresponding Celery task if settings.USE_CELERY is set to
         True.
     """
     if type(to) is not list:
@@ -60,18 +60,25 @@ def send_email(key: str, to: str|list[str], *, params: EmailParams|None = None,
     except (TemplateDoesNotExist, TemplateSyntaxError) as e:
         logger.error(e)
 
-    message = EmailMultiAlternatives(
-        subject=subject,
-        body=text_message,
-        from_email=from_email,
-        to=to,
-        cc=cc,
-        bcc=bcc,
-        attachments=attachments,
-        alternatives=[(html_message, 'text/html')],
-    )
-
-    if settings.EMAIL_ASYNC: # Send email using Celery.
-        return -1
+    if settings.USE_CELERY: # Send email using Celery.
+        return send_email_task.delay(
+            subject=subject,
+            text_message=text_message,
+            html_message=html_message,
+            from_email=from_email,
+            to=to,
+            cc=cc,
+            bcc=bcc,
+            attachments=attachments,
+        )
     else:
-        return message.send()
+        return send_email_task(
+            subject=subject,
+            text_message=text_message,
+            html_message=html_message,
+            from_email=from_email,
+            to=to,
+            cc=cc,
+            bcc=bcc,
+            attachments=attachments,
+        )

@@ -42,7 +42,7 @@ def get_token_url(action: Literal['refresh', 'verify'] | None = None) -> str:
         action = 'obtain_pair'
     return reverse(f'api.accounts:token_{action}')
 
-def get_seller_url(pk=None):
+def get_seller_url(pk=None) -> str:
     """Returns seller endpoint URL.
 
     Args:
@@ -55,7 +55,7 @@ def get_seller_url(pk=None):
         return reverse('api.shop:seller-detail', kwargs={'pk': pk})
     return reverse('api.shop:seller-list')
 
-def get_category_url(pk=None):
+def get_category_url(pk=None) -> str:
     """Returns category endpoint URL.
 
     Args:
@@ -68,7 +68,7 @@ def get_category_url(pk=None):
         return reverse('api.shop:category-detail', kwargs={'pk': pk})
     return reverse('api.shop:category-list')
 
-def get_product_url(pk=None):
+def get_product_url(pk=None) -> str:
     """Returns product endpoint URL.
 
     Args:
@@ -81,7 +81,7 @@ def get_product_url(pk=None):
         return reverse('api.shop:product-detail', kwargs={'pk': pk})
     return reverse('api.shop:product-list')
 
-def get_cart_url(pk=None):
+def get_cart_url(pk=None) -> str:
     """Returns cart endpoint URL.
 
     Args:
@@ -97,7 +97,7 @@ def get_cart_url(pk=None):
     else:
         return reverse('api.shop:cartlineitem-detail', kwargs={'pk': pk})
 
-def get_shipping_address_url(pk=None):
+def get_shipping_address_url(pk=None) -> str:
     """Returns shipping address endpoint URL.
 
     Args:
@@ -110,7 +110,7 @@ def get_shipping_address_url(pk=None):
         return reverse('api.shop:shippingaddress-detail', kwargs={'pk': pk})
     return reverse('api.shop:shippingaddress-list')
 
-def get_order_url(pk=None):
+def get_order_url(pk=None) -> str:
     """Returns order endpoint URL.
 
     Args:
@@ -122,6 +122,11 @@ def get_order_url(pk=None):
     if pk:
         return reverse('api.shop:order-detail', kwargs={'pk': pk})
     return reverse('api.shop:order-list')
+
+def get_import_url() -> str:
+    """Returns catalog import endpoint URL."""
+    return reverse('api.shop:import')
+
 
 def assert_response(response: Response, status: int, json: dict|list):
     """Asserts API response.

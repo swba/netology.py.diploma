@@ -191,7 +191,6 @@ EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
 EMAIL_PORT = env.int('EMAIL_PORT')
 EMAIL_USE_SSL = env.bool('EMAIL_USE_SSL')
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
-EMAIL_ASYNC = env.bool('EMAIL_ASYNC', False) # Whether to use Celery to send emails.
 
 
 # Settings specific to the current project.
@@ -209,3 +208,15 @@ SPECTACULAR_SETTINGS = {
     'SERVE_INCLUDE_SCHEMA': False,
     'SCHEMA_PATH_PREFIX': r'/api/v[0-9]/',
 }
+
+
+# Celery configuration.
+# https://docs.celeryq.dev/en/v5.5.3/django/first-steps-with-django.html
+
+USE_CELERY = env.bool('USE_CELERY', False) # Whether to use Celery.
+CELERY_BROKER = f'redis://{env('REDIS_HOST')}:{env('REDIS_PORT')}/0'
+CELERY_BACKEND = (
+    f'db+postgresql+psycopg://{env('POSTGRES_USER')}:{env('POSTGRES_PASS')}@'
+    f'{env('POSTGRES_HOST')}:{env('POSTGRES_PORT')}/'
+    f'{env('POSTGRES_NAME')}'
+)

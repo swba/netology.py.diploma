@@ -1,0 +1,22 @@
+- external_id: 4216292
+  model: apple/iphone/xs-max
+  title: Смартфон Apple iPhone XS Max 512GB (золотистый)
+  price: 110000
+  list_price: 116990
+  quantity: 14
+  parameters:
+    "Диагональ (дюйм)": 6.5
+    "Разрешение (пикс)": 2688x1242
+    "Встроенная память (Гб)": 512
+    "Цвет": золотистый
+- category_id: 1
+  model: apple/iphone/xr
+  title: Смартфон Apple iPhone XR 256GB (красный)
+  price: 65000
+  list_price: 69990
+  quantity: 9
+  parameters:
+    "Диагональ (дюйм)": 6.1
+    "Разрешение (пикс)": 1792x828
+    "Встроенная память (Гб)": 256
+    "Цвет": красный

@@ -123,9 +123,8 @@ def test_order_create__seller_inactive(api_client_auth, seller_factory,
 
 @pytest.mark.django_db
 def test_order_create(api_client_auth, user_factory, catalog_factory,
-        shipping_address_factory, cart_line_item_factory, settings, mailoutbox):
+        shipping_address_factory, cart_line_item_factory, mailoutbox):
     """Test creating an order."""
-    settings.EMAIL_ASYNC = False # Do not use Celery for testing.
 
     catalog_factory()
     products = Product.objects.all()[:8]

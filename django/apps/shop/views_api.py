@@ -1,19 +1,39 @@
+import json
+
+import requests
+import yaml
+from django.conf import settings
 from django.db import IntegrityError
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter
+from drf_spectacular.utils import (
+    extend_schema,
+    extend_schema_view,
+    OpenApiParameter
+)
 from rest_framework import mixins, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
+from apps.base.email import send_email, EmailParams
+
 from .filters import ProductFilter
-from .models import Product, CartLineItem, ShippingAddress, Order, Category, Seller
+from .models import (
+    Product,
+    CartLineItem,
+    ShippingAddress,
+    Order,
+    Category,
+    Seller
+)
 from .permissions import (
     ShippingAddressPermission,
     OrderPermission,
@@ -28,8 +48,10 @@ from .serializers import (
     OrderSerializer,
     OrderCreateSerializer,
     SellerSerializer,
+    ProductImportSerializer,
+    CatalogImportSerializer,
 )
-from ..base.email import send_email, EmailParams
+from .tasks import catalog_import_task
 
 
 class SellerViewSet(ModelViewSet):
@@ -334,3 +356,73 @@ class OrderViewSet(mixins.ListModelMixin,
             )
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class CatalogImportView(APIView):
+    """View to import seller products."""
+
+    permission_classes = (IsAuthenticated,)
+
+    # noinspection PyMethodMayBeStatic
+    def post(self, request: Request, *args, **kwargs):
+        """Imports seller products from a YAML or JSON file.
+
+        This method allows two ways of providing data to import. If
+        request contains a file, it's used to import. Otherwise, if
+        POSTed data has a 'url' parameter, it's used to upload data
+        from the internet.
+        """
+        serializer = CatalogImportSerializer(data=request.data, context={
+            'request': request, # Required by `seller` field.
+        })
+        serializer.is_valid(raise_exception=True)
+
+        seller = serializer.validated_data.get('seller')
+        data_format = serializer.validated_data.get('format')
+
+        # There is a data file uploaded.
+        if 'file' in serializer.validated_data:
+            stream = serializer.validated_data.get('file')
+        # There is a URL with a file to retrieve.
+        else:
+            url = serializer.validated_data.get('url')
+            stream = requests.get(url).content
+
+        # Get products to import.
+        if data_format == 'json':
+            data = json.load(stream)
+        else:
+            data = yaml.full_load(stream)
+
+        if data:
+            serializer = ProductImportSerializer(data=data, many=True, context={
+                'seller_id': seller.pk,
+            })
+            serializer.is_valid(raise_exception=True)
+
+            if settings.USE_CELERY:
+                task_id = catalog_import_task.delay(
+                    seller_id=seller.pk,
+                    products=serializer.validated_data
+                )
+                return Response(
+                    {
+                        'detail': "Products were scheduled for import.",
+                        'task_id': task_id,
+                    },
+                    status=status.HTTP_200_OK
+                )
+            else:
+                catalog_import_task(
+                    seller_id=seller.pk,
+                    products=serializer.validated_data
+                )
+                return Response(
+                    {'detail': "Import completed."},
+                    status=status.HTTP_200_OK
+                )
+        else:
+            return Response(
+                {'detail': "Empty data."},
+                status=status.HTTP_400_BAD_REQUEST
+            )

@@ -8,7 +8,7 @@ from .views_api import (
     CartLineItemViewSet,
     ShippingAddressViewSet,
     OrderViewSet,
-    SellerViewSet,
+    SellerViewSet, CatalogImportView,
 )
 
 app_name = 'api.shop'
@@ -38,4 +38,5 @@ urlpatterns = [
     path('cart/', include(cart_router.urls)),
     path('shipping-addresses/', include(shipping_address_router.urls)),
     path('orders/', include(order_router.urls)),
+    path('import/', CatalogImportView.as_view(), name='import'),
 ]

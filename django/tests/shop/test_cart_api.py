@@ -80,6 +80,19 @@ def test_cart_add__no_quantity(api_client_auth: APIClient, catalog_factory):
     assert_cart(response, 201, [(p, 1)])
 
 @pytest.mark.django_db
+def test_cart_add__missing_product(api_client_auth: APIClient, product_factory):
+    """Test adding products to the cart (product doesn't exist)."""
+    url = get_cart_url()
+
+    response = api_client_auth.post(url, {
+        'product_id': 1,
+        'quantity': 1
+    })
+    assert_response(response, 400, {
+        'product_id': ["Product does not exist."]
+    })
+
+@pytest.mark.django_db
 def test_cart_add__too_many(api_client_auth: APIClient, product_factory):
     """Test adding products to the cart (quantity is too large)."""
     product = product_factory()

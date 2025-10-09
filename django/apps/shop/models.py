@@ -1,11 +1,11 @@
 from django.contrib.auth import get_user_model
 from django.db import models
-from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
 from apps.base.models import LoggableModel, PhoneField, DeletableModel
+from apps.base.utils import slugify
 
-from .manager import ProductManager, LineItemManager
+from .manager import ProductManager, LineItemManager, CategoryManager
 
 
 class BaseShopModel(LoggableModel, DeletableModel):
@@ -118,6 +118,8 @@ class Category(BaseCatalogModel):
     Product categories are global, i.e. do not belong to any seller.
     """
 
+    objects = CategoryManager()
+
     class Meta:
         verbose_name = _("Product Category")
         verbose_name_plural = _("Product Categories")
@@ -190,7 +192,6 @@ class ProductParameter(models.Model):
         verbose_name=_("Product"))
     name = models.CharField(
         max_length=50,
-        unique=True,
         verbose_name=_("Name"))
     value = models.CharField(
         max_length=100,

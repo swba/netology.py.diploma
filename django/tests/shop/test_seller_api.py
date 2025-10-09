@@ -122,7 +122,8 @@ def test_seller_edit__no_permission(api_client_auth: APIClient, seller_factory):
     })
 
 @pytest.mark.django_db
-def test_seller_edit__not_owner(api_client_auth: APIClient, seller_factory, user_factory):
+def test_seller_edit__not_owner(api_client_auth: APIClient, seller_factory,
+        user_factory):
     """Test updating a seller (under another user)."""
     seller = seller_factory(user=user_factory())
     # noinspection PyUnresolvedReferences
@@ -158,7 +159,8 @@ def test_seller_delete__anonymous(api_client: APIClient, seller_factory):
     })
 
 @pytest.mark.django_db
-def test_seller_delete__no_permission(api_client_auth: APIClient, seller_factory):
+def test_seller_delete__no_permission(api_client_auth: APIClient,
+        seller_factory):
     """Test deleting a seller (no permission)."""
     seller = seller_factory()
     response = api_client_auth.delete(get_seller_url(seller.pk))
@@ -167,7 +169,8 @@ def test_seller_delete__no_permission(api_client_auth: APIClient, seller_factory
     })
 
 @pytest.mark.django_db
-def test_seller_delete__not_owner(api_client_auth: APIClient, seller_factory, user_factory):
+def test_seller_delete__not_owner(api_client_auth: APIClient, seller_factory,
+        user_factory):
     """Test deleting a seller (under another user)."""
     seller = seller_factory(user=user_factory())
     # noinspection PyUnresolvedReferences
