@@ -415,8 +415,6 @@ def test_password_restore__bad_password(api_client: APIClient, user_factory):
         'token': token.value,
         'password': '1'
     })
-    print(response.status_code)
-    print(response.json())
     assert_response(response, 400, {
         'password': [
             "This password is too short. It must contain at least 8 characters.",

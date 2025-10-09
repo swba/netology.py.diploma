@@ -25,7 +25,6 @@ def test_product_search__all(api_client: APIClient, catalog_factory):
     url = get_product_url()
 
     response = api_client.get(url)
-    print(response.json())
     assert response.status_code == 200
     assert response.data['results'] == serialize_product_list(
         Product.objects.all().paginate().get_page(1)
