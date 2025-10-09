@@ -2,14 +2,14 @@ from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from apps.base.models import LoggableModel, PhoneField, DeletableModel
+from apps.base.models import LoggableModel, PhoneField
 from apps.base.utils import slugify
 
 from .manager import ProductManager, LineItemManager, CategoryManager
 
 
-class BaseShopModel(LoggableModel, DeletableModel):
-    """Abstract loggable and deletable model."""
+class BaseShopModel(LoggableModel):
+    """Abstract loggable shop model."""
 
     class Meta:
         abstract = True
