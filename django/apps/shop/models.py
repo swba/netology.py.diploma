@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -298,6 +299,15 @@ class OrderLineItem(BaseLineItem):
                 fields=('order', 'product'),
                 name='unique_order_product')
         ]
+
+    def clean(self):
+        super().clean()
+
+        # Ensure product belongs to the order's seller.
+        if self.product.seller.pk != self.order.seller.pk:
+            raise ValidationError(
+                _("Product seller must match the order seller.")
+            )
 
 
 class CartLineItem(BaseLineItem):
