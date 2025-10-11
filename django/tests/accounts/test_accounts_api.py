@@ -116,7 +116,7 @@ def test_user_register__bare_minimum(api_client: APIClient, user_factory):
         'password': password,
     })
     assert_response(response, 201, data | {
-        'id': 1,
+        'id': User.objects.order_by('-created_at').last().id,
         'first_name': '',
         'last_name': ''
     })
@@ -127,7 +127,7 @@ def test_user_register__success(api_client: APIClient, user_factory, mailoutbox)
     # Check user registered.
     response, data = prepare_and_register(api_client, user_factory)
     assert_response(response, 201, data | {
-        'id': 1,
+        'id': User.objects.order_by('-created_at').last().id,
     })
 
     # Check that the verification email was sent.

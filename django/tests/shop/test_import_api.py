@@ -197,7 +197,7 @@ def test_import_url__no_categories(api_client_auth: APIClient, seller_factory):
 def test_import__invalid_data(api_client_auth: APIClient, category_factory,
         seller_factory):
     """Test importing seller products (invalid data)."""
-    category_factory(),
+    category_factory(id=1),
     # noinspection PyUnresolvedReferences
     seller = seller_factory(user=api_client_auth._user)
 
@@ -233,9 +233,9 @@ def prepare_successful_test(api_client_auth: APIClient, category_factory,
         seller_factory, product_factory):
     """Prepares data for successful import test."""
     # Create required categories.
-    category_factory(title="Смартфоны"),
-    category_factory(title="Телевизоры"),
-    category_factory(title="Flash-накопители")
+    category_factory(id=1, title="Смартфоны"),
+    category_factory(id=2, title="Телевизоры"),
+    category_factory(id=3, title="Flash-накопители")
 
     # Create several products for another user and seller.
     seller = seller_factory()

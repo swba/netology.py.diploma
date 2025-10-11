@@ -97,9 +97,10 @@ class BaseCatalogModel(BaseShopModel):
     """Base abstract model for categories and products."""
 
     title = models.CharField(
-        max_length=255,
+        max_length=80,
         verbose_name=_("Title"))
     slug = models.SlugField(
+        max_length=100,
         verbose_name=_("Slug"))
 
     class Meta:
@@ -327,3 +328,4 @@ class CartLineItem(BaseLineItem):
                 fields=('user', 'product'),
                 name='unique_user_product')
         ]
+        ordering = ('id',)

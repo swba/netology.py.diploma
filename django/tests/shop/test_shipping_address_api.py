@@ -1,6 +1,7 @@
 # noinspection PyPackageRequirements
 import pytest
 
+from apps.shop.models import ShippingAddress
 from tests.utils import get_shipping_address_url, assert_response
 
 @pytest.mark.django_db
@@ -69,7 +70,7 @@ def test_shipping_address_add(api_client_auth, shipping_address_factory):
     }
     response = api_client_auth.post(get_shipping_address_url(), data)
     assert_response(response, 201, data | {
-        'id': 1,
+        'id': ShippingAddress.objects.order_by('-created_at').last().id,
     })
 
 @pytest.mark.django_db

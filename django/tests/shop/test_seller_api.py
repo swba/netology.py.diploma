@@ -72,7 +72,7 @@ def test_seller_add(api_client_auth: APIClient):
     }
     response = api_client_auth.post(get_seller_url(), data)
     assert_response(response, 201, data | {
-        'id': 1,
+        'id': Seller.objects.order_by('-created_at').last().id,
     })
 
 @pytest.mark.django_db
